@@ -116,14 +116,6 @@ export const updateMyProfile = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const getDashboard = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    await assertStaff(supabase, userId);
-    return { ok: true };
-  });
-
 export const updateTier = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
