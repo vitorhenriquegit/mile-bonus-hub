@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Bell, Fuel, Zap, TrendingUp } from "lucide-react";
 import { CURRENT_USER, TIERS, formatBRL, tierFor } from "@/lib/mock";
 
-export const Route = createFileRoute("/app/")({
+export const Route = createFileRoute("/_authenticated/_authenticated/app/")({
   component: HomeScreen,
 });
 

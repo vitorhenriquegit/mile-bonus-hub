@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, RefreshCw, ShieldCheck, Copy } from "lucide-react";
 import { CURRENT_USER, formatBRL, tierFor } from "@/lib/mock";
 
-export const Route = createFileRoute("/app/token")({
+export const Route = createFileRoute("/_authenticated/_authenticated/app/token")({
   component: TokenScreen,
 });
 
