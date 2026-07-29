@@ -87,7 +87,7 @@ function Monitor() {
             {recent.slice(0, 8).map((tx) => (
               <li key={tx.id} className="flex items-center justify-between px-5 py-3 text-sm">
                 <div>
-                  <p className="font-medium">{tx.profiles?.full_name ?? maskCpf(tx.profiles?.cpf)}</p>
+                  <p className="font-medium">{tx.customerName ?? maskCpf(tx.customerCpf)}</p>
                   <p className="text-xs text-muted-foreground">
                     {tx.fuel_type} · {tx.stations?.name ?? "Posto"}
                   </p>

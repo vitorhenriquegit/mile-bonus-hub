@@ -242,7 +242,7 @@ function Overview() {
                       })}
                     </td>
                     <td className="px-5 py-3 font-medium tabular-nums">
-                      {tx.profiles?.full_name ?? maskCpf(tx.profiles?.cpf)}
+                      {tx.customerName ?? maskCpf(tx.customerCpf)}
                     </td>
                     <td className="px-5 py-3 text-muted-foreground">{tx.fuel_type}</td>
                     <td className="px-5 py-3 text-right tabular-nums">{Number(tx.liters).toFixed(1)} L</td>
