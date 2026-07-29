@@ -6,6 +6,13 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "FuelRewards — Fidelidade White-Label para Postos" },
       { name: "description", content: "Desconto imediato na bomba com gamificação por volume abastecido." },
+      { property: "og:title", content: "FuelRewards — Fidelidade White-Label para Postos" },
+      {
+        property: "og:description",
+        content: "Desconto imediato na bomba com gamificação por volume abastecido.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Landing,
@@ -21,7 +28,12 @@ function Landing() {
           </div>
           <span className="text-lg font-bold tracking-tight">FuelRewards</span>
         </div>
-        <span className="text-xs font-medium text-muted-foreground">Protótipo white-label</span>
+        <Link
+          to="/auth"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-90"
+        >
+          Entrar
+        </Link>
       </header>
 
       <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
@@ -52,7 +64,7 @@ function Landing() {
               Versão mobile com nível, desconto atual, token de pagamento e histórico.
             </p>
             <span className="mt-4 inline-block text-sm font-semibold text-primary">
-              Abrir protótipo →
+              Acessar app →
             </span>
           </Link>
 
