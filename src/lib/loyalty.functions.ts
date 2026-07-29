@@ -150,7 +150,7 @@ export const getDashboardData = createServerFn({ method: "GET" })
         .gte("created_at", daysAgoISO(30)),
       supabase
         .from("fuelings")
-        .select("id,created_at,fuel_type,liters,discount_total,total,status,user_id,stations(name),profiles:user_id(full_name,cpf)")
+        .select("id,created_at,fuel_type,liters,discount_total,total,status,user_id,stations(name)")
         .order("created_at", { ascending: false })
         .limit(12),
       supabase.from("profiles").select("id,full_name,cpf,created_at"),
@@ -167,6 +167,10 @@ export const getDashboardData = createServerFn({ method: "GET" })
       .select("user_id,liters,created_at")
       .gte("created_at", monthStart);
     if (perUserRes.error) throw perUserRes.error;
+
+    const profileById = new Map(
+      (profilesRes.data ?? []).map((p) => [p.id, { full_name: p.full_name, cpf: p.cpf }]),
+    );
 
     const perUser = new Map<string, { volume: number; last: string }>();
     for (const row of perUserRes.data ?? []) {
@@ -185,7 +189,11 @@ export const getDashboardData = createServerFn({ method: "GET" })
         transactionsMonth: monthRows.length,
       },
       dailySeries: buildDailySeries(all),
-      recent: recentRes.data ?? [],
+      recent: (recentRes.data ?? []).map((tx) => ({
+        ...tx,
+        customerName: profileById.get(tx.user_id)?.full_name ?? null,
+        customerCpf: profileById.get(tx.user_id)?.cpf ?? null,
+      })),
       customers: (profilesRes.data ?? []).map((p) => ({
         id: p.id,
         name: p.full_name || "Sem nome",
