@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Pencil } from "lucide-react";
 import { TIERS, formatBRL } from "@/lib/mock";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/dashboard/regras")({
+export const Route = createFileRoute("/_authenticated/dashboard/regras")({
   component: Rules,
 });
 

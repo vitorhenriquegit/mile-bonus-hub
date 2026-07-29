@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Fuel, MapPin } from "lucide-react";
 import { HISTORY, formatBRL } from "@/lib/mock";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/app/historico")({
+export const Route = createFileRoute("/_authenticated/app/historico")({
   component: History,
 });
 

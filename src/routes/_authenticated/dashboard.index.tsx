@@ -31,7 +31,7 @@ import {
   formatBRL,
 } from "@/lib/mock";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/dashboard/")({
+export const Route = createFileRoute("/_authenticated/dashboard/")({
   component: Overview,
 });
 

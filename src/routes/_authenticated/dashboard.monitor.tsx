@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Fuel, Activity, Gauge, Timer } from "lucide-react";
 import { LIVE_TRANSACTIONS, formatBRL } from "@/lib/mock";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/dashboard/monitor")({
+export const Route = createFileRoute("/_authenticated/dashboard/monitor")({
   component: Monitor,
 });
 

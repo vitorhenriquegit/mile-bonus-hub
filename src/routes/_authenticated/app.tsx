@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, ReceiptText } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/app")({
+export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
 });
 

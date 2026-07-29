@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, SlidersHorizontal, Brain, Fuel, Search, Radio } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/dashboard")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardShell,
 });
 
