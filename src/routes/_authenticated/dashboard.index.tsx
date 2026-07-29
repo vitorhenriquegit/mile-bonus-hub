@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Fuel,
   Percent,
   UserPlus,
-  AlertTriangle,
-  ArrowUpRight,
-  ArrowDownRight,
+  Users,
   Calendar,
   CheckCircle2,
   XCircle,
-  Download,
   SlidersHorizontal,
+  Loader2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -23,75 +23,91 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import {
-  DASHBOARD_METRICS,
-  DAILY_SERIES,
-  LIVE_TRANSACTIONS,
-  TIERS,
-  formatBRL,
-} from "@/lib/mock";
+import { getDashboardData, getTiers } from "@/lib/loyalty.functions";
+import { formatBRL, maskCpf, type Tier } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
+  head: () => ({
+    meta: [
+      { title: "Painel do gestor — FuelRewards" },
+      { name: "description", content: "Volume abastecido, descontos concedidos e transações do programa de fidelidade." },
+      { property: "og:title", content: "Painel do gestor — FuelRewards" },
+      { property: "og:description", content: "Volume abastecido, descontos concedidos e transações do programa de fidelidade." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Overview,
 });
 
 function Overview() {
+  const dashFn = useServerFn(getDashboardData);
+  const tiersFn = useServerFn(getTiers);
+  const dash = useQuery({ queryKey: ["dashboard"], queryFn: () => dashFn({}) });
+  const tiersQuery = useQuery({ queryKey: ["tiers"], queryFn: () => tiersFn({}) });
+
+  if (dash.isLoading) {
+    return (
+      <div className="grid min-h-[50vh] place-items-center text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
+
+  if (dash.isError) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+        Você não tem permissão para acessar o painel do gestor.
+      </div>
+    );
+  }
+
+  const m = dash.data!.metrics;
+  const tiers = (tiersQuery.data ?? []) as unknown as Tier[];
+  const avgDiscount = m.volumeMonth > 0 ? m.discountsGranted / m.volumeMonth : 0;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Inteligência de Vendas</h1>
           <p className="text-sm text-muted-foreground">
-            Performance do programa de fidelidade · rede consolidada
+            Performance do programa de fidelidade · dados do mês corrente
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium shadow-card hover:bg-accent">
-            <Calendar className="h-4 w-4" />
-            Últimos 30 dias
-          </button>
-          <button className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium shadow-card hover:bg-accent">
-            <Download className="h-4 w-4" />
-            Exportar
-          </button>
-        </div>
+        <span className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium shadow-card">
+          <Calendar className="h-4 w-4" />
+          Últimos 30 dias
+        </span>
       </div>
 
-      {/* KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
           label="Volume Abastecido (Galonagem)"
-          value="142.500 L"
-          delta={DASHBOARD_METRICS.volumeDelta}
+          value={`${m.volumeMonth.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L`}
           icon={<Fuel className="h-4 w-4" />}
-          hint="vs. mês anterior"
+          hint="mês corrente"
         />
         <Kpi
           label="Descontos Concedidos"
-          value={formatBRL(DASHBOARD_METRICS.discountsGranted)}
-          delta={DASHBOARD_METRICS.discountsDelta}
+          value={formatBRL(m.discountsGranted)}
           icon={<Percent className="h-4 w-4" />}
-          hint="ticket médio R$ 0,087/L"
+          hint={`média ${formatBRL(avgDiscount)}/L`}
         />
         <Kpi
           label="Novos Clientes no App"
-          value={DASHBOARD_METRICS.newCustomers.toLocaleString("pt-BR")}
-          delta={DASHBOARD_METRICS.newCustomersDelta}
+          value={m.newCustomers.toLocaleString("pt-BR")}
           icon={<UserPlus className="h-4 w-4" />}
-          hint="ativação no app"
+          hint="cadastros neste mês"
         />
         <Kpi
-          label="Risco de Churn"
-          value={`${DASHBOARD_METRICS.churnRisk}%`}
-          delta={DASHBOARD_METRICS.churnDelta}
-          icon={<AlertTriangle className="h-4 w-4" />}
-          hint="sem abastecer há 30+ dias"
-          danger
+          label="Base total de clientes"
+          value={m.totalCustomers.toLocaleString("pt-BR")}
+          icon={<Users className="h-4 w-4" />}
+          hint={`${m.transactionsMonth} transações no mês`}
         />
       </div>
 
-      {/* Chart */}
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -105,7 +121,7 @@ function Overview() {
         </div>
         <div className="mt-4 h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={DAILY_SERIES} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <ComposedChart data={dash.data!.dailySeries} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
               <YAxis yAxisId="left" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
@@ -129,7 +145,6 @@ function Overview() {
         </div>
       </div>
 
-      {/* Tiers section */}
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -145,9 +160,9 @@ function Overview() {
           </Link>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {TIERS.map((t, i) => (
+          {tiers.map((t, i) => (
             <div
-              key={t.name}
+              key={t.id}
               className="rounded-xl border border-border p-4 transition hover:shadow-card"
               style={{ background: `color-mix(in oklab, var(--${t.color}) 8%, var(--card))` }}
             >
@@ -164,21 +179,23 @@ function Overview() {
               </div>
               <p className="mt-3 text-xs text-muted-foreground">Faixa de volume</p>
               <p className="text-sm font-semibold">
-                {t.min}L – {t.max > 999 ? "∞" : `${t.max}L`}
+                {t.min_liters}L – {t.max_liters > 999 ? "∞" : `${t.max_liters}L`}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">Desconto na bomba</p>
-              <p className="text-2xl font-bold tabular-nums">{formatBRL(t.discount)}<span className="text-xs font-medium text-muted-foreground">/L</span></p>
+              <p className="text-2xl font-bold tabular-nums">
+                {formatBRL(t.discount_per_liter)}
+                <span className="text-xs font-medium text-muted-foreground">/L</span>
+              </p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Live transactions table */}
       <div className="rounded-2xl border border-border bg-card shadow-card">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
-            <p className="text-sm font-semibold">Transações em Tempo Real</p>
-            <p className="text-xs text-muted-foreground">Stream do Data Lake · atualização contínua</p>
+            <p className="text-sm font-semibold">Transações recentes</p>
+            <p className="text-xs text-muted-foreground">Abastecimentos validados pelo token</p>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
             <span className="relative flex h-2 w-2">
@@ -188,42 +205,59 @@ function Overview() {
             Live
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-xs uppercase tracking-wider text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="px-5 py-3 text-left font-semibold">Status</th>
-                <th className="px-5 py-3 text-left font-semibold">Data/Hora</th>
-                <th className="px-5 py-3 text-left font-semibold">Cliente</th>
-                <th className="px-5 py-3 text-left font-semibold">Combustível</th>
-                <th className="px-5 py-3 text-right font-semibold">Volume</th>
-                <th className="px-5 py-3 text-right font-semibold">Desconto</th>
-                <th className="px-5 py-3 text-right font-semibold">Valor Final</th>
-              </tr>
-            </thead>
-            <tbody>
-              {LIVE_TRANSACTIONS.map((tx) => (
-                <tr key={tx.id} className="border-b border-border/60 last:border-0 hover:bg-muted/40">
-                  <td className="px-5 py-3">
-                    {tx.status === "ok" ? (
-                      <CheckCircle2 className="h-4 w-4 text-success" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-destructive" />
-                    )}
-                  </td>
-                  <td className="px-5 py-3 tabular-nums text-muted-foreground">Hoje · {tx.time}</td>
-                  <td className="px-5 py-3 font-medium tabular-nums">{tx.cpf}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{tx.fuel}</td>
-                  <td className="px-5 py-3 text-right tabular-nums">{tx.liters.toFixed(1)} L</td>
-                  <td className="px-5 py-3 text-right tabular-nums text-primary font-semibold">
-                    {formatBRL(tx.discount)}
-                  </td>
-                  <td className="px-5 py-3 text-right tabular-nums font-bold">{formatBRL(tx.total)}</td>
+        {dash.data!.recent.length === 0 ? (
+          <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+            Nenhuma transação registrada ainda.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="px-5 py-3 text-left font-semibold">Status</th>
+                  <th className="px-5 py-3 text-left font-semibold">Data/Hora</th>
+                  <th className="px-5 py-3 text-left font-semibold">Cliente</th>
+                  <th className="px-5 py-3 text-left font-semibold">Combustível</th>
+                  <th className="px-5 py-3 text-right font-semibold">Volume</th>
+                  <th className="px-5 py-3 text-right font-semibold">Desconto</th>
+                  <th className="px-5 py-3 text-right font-semibold">Valor Final</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {dash.data!.recent.map((tx) => (
+                  <tr key={tx.id} className="border-b border-border/60 last:border-0 hover:bg-muted/40">
+                    <td className="px-5 py-3">
+                      {tx.status === "completed" ? (
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-destructive" />
+                      )}
+                    </td>
+                    <td className="px-5 py-3 tabular-nums text-muted-foreground">
+                      {new Date(tx.created_at).toLocaleString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="px-5 py-3 font-medium tabular-nums">
+                      {tx.profiles?.full_name ?? maskCpf(tx.profiles?.cpf)}
+                    </td>
+                    <td className="px-5 py-3 text-muted-foreground">{tx.fuel_type}</td>
+                    <td className="px-5 py-3 text-right tabular-nums">{Number(tx.liters).toFixed(1)} L</td>
+                    <td className="px-5 py-3 text-right font-semibold tabular-nums text-primary">
+                      {formatBRL(Number(tx.discount_total))}
+                    </td>
+                    <td className="px-5 py-3 text-right font-semibold tabular-nums">
+                      {formatBRL(Number(tx.total))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -232,43 +266,19 @@ function Overview() {
 function Kpi({
   label,
   value,
-  delta,
   icon,
   hint,
-  danger,
 }: {
   label: string;
   value: string;
-  delta: number;
   icon: React.ReactNode;
   hint?: string;
-  danger?: boolean;
 }) {
-  const positive = delta >= 0;
-  const isGood = danger ? !positive : positive;
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-      <div className="flex items-center justify-between">
-        <div
-          className={`grid h-9 w-9 place-items-center rounded-lg ${
-            danger ? "bg-destructive/10 text-destructive" : "bg-accent text-foreground"
-          }`}
-        >
-          {icon}
-        </div>
-        <span
-          className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold ${
-            isGood ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-          }`}
-        >
-          {positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-          {Math.abs(delta).toFixed(1)}%
-        </span>
-      </div>
+      <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent text-foreground">{icon}</div>
       <p className="mt-4 text-xs font-medium text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-2xl font-bold tracking-tight tabular-nums ${danger ? "text-destructive" : ""}`}>
-        {value}
-      </p>
+      <p className="mt-1 text-2xl font-bold tracking-tight tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
     </div>
   );
