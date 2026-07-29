@@ -1,5 +1,7 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, SlidersHorizontal, Brain, Fuel, Search, Radio } from "lucide-react";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { LayoutDashboard, SlidersHorizontal, Brain, Fuel, Radio, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardShell,
@@ -7,6 +9,15 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function DashboardShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
 
   const items = [
     { to: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
@@ -54,9 +65,13 @@ function DashboardShell() {
           </ul>
         </nav>
 
-        <div className="mt-auto px-5 py-5 text-xs opacity-60">
-          Posto Centro · Operador
-        </div>
+        <button
+          onClick={signOut}
+          className="mt-auto flex items-center gap-2 px-5 py-5 text-xs opacity-70 hover:opacity-100"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair da conta
+        </button>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -68,13 +83,13 @@ function DashboardShell() {
             <span className="text-sm font-bold">FuelRewards</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground sm:flex">
-              <Search className="h-4 w-4" />
-              <span>Buscar cliente, CPF...</span>
-            </div>
-            <div className="grid h-9 w-9 place-items-center rounded-full bg-accent text-sm font-semibold">
-              MG
-            </div>
+            <button
+              onClick={signOut}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent md:hidden"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </button>
           </div>
         </header>
         <main className="min-w-0 flex-1 px-6 py-6">
