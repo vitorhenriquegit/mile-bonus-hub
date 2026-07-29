@@ -121,6 +121,34 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     await assertStaff(supabase, userId);
+    return { ok: true };
+  });
+
+export const updateTier = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        min_liters: z.number().min(0),
+        max_liters: z.number().min(0),
+        discount_per_liter: z.number().min(0).max(10),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertStaff(context.supabase, context.userId);
+    const { id, ...patch } = data;
+    const { error } = await context.supabase.from("tiers").update(patch).eq("id", id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const getDashboardData = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertStaff(supabase, userId);
 
     const monthStart = startOfMonthISO();
     const [seriesRes, recentRes, profilesRes] = await Promise.all([
