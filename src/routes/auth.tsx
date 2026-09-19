@@ -73,16 +73,24 @@ function AuthPage() {
 
   async function handleGoogle() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
+    try {
+      const redirectUrl = typeof window !== "undefined" ? `${window.location.origin}/app` : undefined;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+      if (error) {
+        const result = await lovable.auth.signInWithOAuth("google", {
+          redirect_uri: redirectUrl,
+        });
+        if (result.error) throw result.error;
+      }
+    } catch (err) {
       setLoading(false);
-      toast.error("Não foi possível entrar com o Google.");
-      return;
+      toast.error(err instanceof Error ? err.message : "Não foi possível entrar com o Google.");
     }
-    if (result.redirected) return;
-    navigate({ to: "/app", replace: true });
   }
 
   return (
