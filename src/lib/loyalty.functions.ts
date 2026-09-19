@@ -22,8 +22,8 @@ const DEFAULT_TIERS = [
 export const getTiers = createServerFn({ method: "GET" }).handler(async () => {
   try {
     const supabase = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      process.env.SUPABASE_URL || "https://gsgvdawyhelqyxrswgcf.supabase.co",
+      process.env.SUPABASE_PUBLISHABLE_KEY || "sb_publishable_uN3ZWmxi4u8P4ZEjf8vK6w_vA3BX9P4",
       { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
     );
     const { data, error } = await supabase
@@ -240,8 +240,8 @@ export const getDashboardData = createServerFn({ method: "GET" })
 export const getStations = createServerFn({ method: "GET" }).handler(async () => {
   try {
     const supabase = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      process.env.SUPABASE_URL || "https://gsgvdawyhelqyxrswgcf.supabase.co",
+      process.env.SUPABASE_PUBLISHABLE_KEY || "sb_publishable_uN3ZWmxi4u8P4ZEjf8vK6w_vA3BX9P4",
       { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
     );
     const { data, error } = await supabase.from("stations").select("id,name,city,state,is_active").order("name");
