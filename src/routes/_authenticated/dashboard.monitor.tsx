@@ -44,8 +44,8 @@ function Monitor() {
     );
   }
 
-  const recent = dash.data!.recent;
-  const m = dash.data!.metrics;
+  const recent = dash.data?.recent || [];
+  const m = dash.data?.metrics || { transactionsMonth: 0, volumeMonth: 0, discountsGranted: 0 };
   const avgLiters = m.transactionsMonth > 0 ? m.volumeMonth / m.transactionsMonth : 0;
 
   return (

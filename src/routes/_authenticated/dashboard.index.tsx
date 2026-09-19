@@ -68,13 +68,21 @@ function Overview() {
     );
   }
 
-  const m = dash.data!.metrics;
+  const m = dash.data?.metrics || {
+    volumeMonth: 0,
+    discountsGranted: 0,
+    newCustomers: 0,
+    totalCustomers: 0,
+    transactionsMonth: 0,
+  };
+  const dailySeries = dash.data?.dailySeries || [];
+  const recent = dash.data?.recent || [];
   const tiers = (tiersQuery.data ?? []) as unknown as Tier[];
   const avgDiscount = m.volumeMonth > 0 ? m.discountsGranted / m.volumeMonth : 0;
 
   const handleExportCsv = () => {
     const headers = ["ID", "Data", "Cliente/CPF", "Combustível", "Volume (L)", "Desconto Total (R$)", "Total Pago (R$)"];
-    const rows = dash.data!.recent.map((tx) => [
+    const rows = recent.map((tx) => [
       tx.id,
       new Date(tx.created_at).toLocaleString("pt-BR"),
       tx.customerName || maskCpf(tx.customerCpf),
@@ -172,7 +180,7 @@ function Overview() {
         </div>
         <div className="mt-4 h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={dash.data!.dailySeries} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <ComposedChart data={dailySeries} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
               <YAxis yAxisId="left" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
@@ -256,7 +264,7 @@ function Overview() {
             Live
           </span>
         </div>
-        {dash.data!.recent.length === 0 ? (
+        {recent.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-muted-foreground">
             Nenhuma transação registrada ainda.
           </p>
@@ -275,7 +283,7 @@ function Overview() {
                 </tr>
               </thead>
               <tbody>
-                {dash.data!.recent.map((tx) => (
+                {recent.map((tx) => (
                   <tr key={tx.id} className="border-b border-border/60 last:border-0 hover:bg-muted/40">
                     <td className="px-5 py-3">
                       {tx.status === "completed" ? (
