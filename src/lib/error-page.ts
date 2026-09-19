@@ -32,5 +32,3 @@ export function renderErrorPage(debugMessage?: string): string {
   </body>
 </html>`;
 }
-
-}
