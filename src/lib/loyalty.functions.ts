@@ -437,8 +437,7 @@ export const getWheelPrizes = createServerFn({ method: "GET" }).handler(async ()
 });
 
 export const saveWheelPrizes = createServerFn({ method: "POST" })
-  .validator((data: any) => data)
-  .handler(async ({ data }) => {
+  .handler(async ({ data }: { data: any }) => {
     if (Array.isArray(data) && data.length > 0) {
       currentWheelPrizes = data;
     }
