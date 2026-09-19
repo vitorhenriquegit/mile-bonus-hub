@@ -43,6 +43,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
+  const errorText = error instanceof Error
+    ? `${error.name}: ${error.message}\n\n${error.stack ?? ""}`
+    : String(error);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -69,6 +73,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Go home
           </a>
         </div>
+        <details className="mt-6 text-left">
+          <summary className="cursor-pointer text-xs text-muted-foreground">Detalhes do erro (debug)</summary>
+          <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-md bg-muted p-3 text-left text-[0.65rem] text-muted-foreground">
+            {errorText}
+          </pre>
+        </details>
       </div>
     </div>
   );
