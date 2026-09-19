@@ -56,8 +56,12 @@ function MobileRoletaScreen() {
 
   return (
     <div className="relative flex min-h-screen flex-col px-5 pt-6 pb-24 bg-gradient-to-b from-background via-card/50 to-background overflow-hidden">
-      {/* Background Decorative Glow */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      {/* Background Decorative Glow que cresce ao girar */}
+      <div
+        className={`absolute top-20 left-1/2 -translate-x-1/2 rounded-full blur-3xl pointer-events-none -z-10 transition-all duration-700 ${
+          mustSpin ? "w-96 h-96 bg-amber-500/35" : "w-72 h-72 bg-amber-500/15"
+        }`}
+      />
 
       {/* Top Bar */}
       <div className="flex items-center justify-between">
@@ -75,7 +79,7 @@ function MobileRoletaScreen() {
       </div>
 
       {/* Hero Header */}
-      <div className="mt-5 text-center space-y-1.5">
+      <div className={`mt-4 text-center space-y-1.5 transition-all duration-500 ${mustSpin ? "opacity-25 scale-95" : "opacity-100 scale-100"}`}>
         <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-amber-500/20 border border-amber-500/30 px-3.5 py-1 text-xs font-black text-amber-600 dark:text-amber-400 shadow-xs">
           <Gift className="h-3.5 w-3.5 animate-bounce" /> Giro Diário Disponível!
         </div>
@@ -87,19 +91,25 @@ function MobileRoletaScreen() {
         </p>
       </div>
 
-      {/* Center Canvas Spin Wheel */}
-      <div className="my-6 flex flex-col items-center justify-center relative">
+      {/* Center Canvas Spin Wheel com Zoom Dinâmico ao Girar */}
+      <div
+        className={`my-6 flex flex-col items-center justify-center relative transition-all duration-700 ease-out origin-center ${
+          mustSpin
+            ? "scale-[1.18] sm:scale-125 z-40 my-9 drop-shadow-2xl"
+            : "scale-100 z-10"
+        }`}
+      >
         <SpinWheel
           prizes={prizes}
           mustSpin={mustSpin}
           targetIndex={targetIndex}
           onStopSpinning={handleStopSpinning}
-          size={310}
+          size={315}
         />
       </div>
 
       {/* Bottom Controls */}
-      <div className="mt-auto space-y-3">
+      <div className={`mt-auto space-y-3 transition-all duration-500 ${mustSpin ? "opacity-80" : "opacity-100"}`}>
         <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-card p-3 text-center text-xs">
           <p className="text-muted-foreground">
             🎯 Todos os giros têm prêmio garantido para o seu próximo abastecimento.

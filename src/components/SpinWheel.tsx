@@ -168,29 +168,52 @@ export function SpinWheel({
       ctx.stroke();
       ctx.restore();
 
-      // 3. PRIZE LABELS WITH TEXT-SHADOW
+      // 3. PRIZE LABELS WITH HIGH-CONTRAST BADGE & SHARP TYPOGRAPHY
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.rotate(start + sliceAngle / 2);
-      ctx.textAlign = "right";
+
+      // Radial distance from center for text
+      const textRadius = wheelRadius * 0.62;
+
+      // Draw high-contrast translucent pill behind the text for crystal clear readability
+      const pillWidth = wheelRadius * 0.58;
+      const pillHeight = prize.sublabel ? 34 : 26;
+      const pillX = textRadius - pillWidth / 2;
+      const pillY = -pillHeight / 2;
+
+      ctx.save();
+      ctx.beginPath();
+      // Rounded pill rect
+      const pillRadius = 8;
+      ctx.roundRect(pillX, pillY, pillWidth, pillHeight, pillRadius);
+      ctx.fillStyle = "rgba(10, 15, 29, 0.55)";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(254, 240, 138, 0.45)";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      // Shadow for text contrast
-      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetX = 1;
-      ctx.shadowOffsetY = 1;
+      // Shadow for text depth
+      ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
 
-      // Main Prize Label
-      ctx.fillStyle = prize.textColor || "#FFFFFF";
-      ctx.font = "900 13px Inter, -apple-system, sans-serif";
-      ctx.fillText(prize.label, wheelRadius - 24, -6);
+      // Main Prize Label (Grande, negrito e fácil de ler de longe!)
+      const labelY = prize.sublabel ? -6 : 0;
+      ctx.font = "900 15px Inter, -apple-system, sans-serif";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(prize.label, textRadius, labelY);
 
-      // Sublabel (ex: "Desconto/L" ou "Na Conveniência")
+      // Sublabel (ex: "Desconto / L" ou "Na Conveniência")
       if (prize.sublabel) {
-        ctx.font = "700 9.5px Inter, -apple-system, sans-serif";
-        ctx.fillStyle = prize.textColor ? adjustBrightness(prize.textColor, -20) : "rgba(255, 255, 255, 0.9)";
-        ctx.fillText(prize.sublabel, wheelRadius - 24, 8);
+        ctx.font = "800 10.5px Inter, -apple-system, sans-serif";
+        ctx.fillStyle = "#FEF08A"; // Tom amarelo-ouro de alto contraste
+        ctx.fillText(prize.sublabel, textRadius, 9);
       }
 
       ctx.restore();
