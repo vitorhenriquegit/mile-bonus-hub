@@ -32,6 +32,7 @@ import { exportToCsv, formatBRL, maskCpf, type Tier } from "@/lib/loyalty";
 import { AttendantTerminal } from "@/components/AttendantTerminal";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Painel do gestor — FuelRewards" },

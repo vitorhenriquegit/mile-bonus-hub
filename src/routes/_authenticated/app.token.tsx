@@ -8,6 +8,7 @@ import { createFuelToken, getMyActiveToken, getMyOverview, getTiers } from "@/li
 import { formatBRL, maskCpf, tierFor, type Tier } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/app/token")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Token de abastecimento — FuelRewards" },

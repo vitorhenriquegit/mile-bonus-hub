@@ -6,6 +6,7 @@ import { getMyFuelings } from "@/lib/loyalty.functions";
 import { formatBRL, formatDate } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/app/historico")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Histórico de abastecimentos — FuelRewards" },

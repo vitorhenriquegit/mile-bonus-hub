@@ -8,6 +8,7 @@ import { getTiers, updateTier } from "@/lib/loyalty.functions";
 import { formatBRL, type Tier } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/dashboard/regras")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Regras de desconto — FuelRewards" },

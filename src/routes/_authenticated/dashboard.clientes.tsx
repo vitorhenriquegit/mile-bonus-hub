@@ -7,6 +7,7 @@ import { getDashboardData, getTiers } from "@/lib/loyalty.functions";
 import { exportToCsv, maskCpf, relativeDay, tierFor, type Tier } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/dashboard/clientes")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Clientes — FuelRewards" },

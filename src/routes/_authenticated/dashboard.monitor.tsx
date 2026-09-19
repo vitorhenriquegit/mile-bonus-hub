@@ -7,6 +7,7 @@ import { formatBRL, maskCpf } from "@/lib/loyalty";
 import { AttendantTerminal } from "@/components/AttendantTerminal";
 
 export const Route = createFileRoute("/_authenticated/dashboard/monitor")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Monitor de pista — FuelRewards" },

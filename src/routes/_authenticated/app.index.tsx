@@ -6,6 +6,7 @@ import { getMyOverview, getTiers } from "@/lib/loyalty.functions";
 import { formatBRL, tierFor, type Tier } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/app/")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Meu nível — FuelRewards" },

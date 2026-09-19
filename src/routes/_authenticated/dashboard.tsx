@@ -7,6 +7,7 @@ import { getStations } from "@/lib/loyalty.functions";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  ssr: false,
   component: DashboardShell,
 });
 

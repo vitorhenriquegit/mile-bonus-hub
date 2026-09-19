@@ -9,6 +9,7 @@ import { SpinWheel } from "@/components/SpinWheel";
 import { DEFAULT_WHEEL_PRIZES, type WheelPrize } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/dashboard/roleta")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Configurar Roleta da Sorte — FuelRewards" },
