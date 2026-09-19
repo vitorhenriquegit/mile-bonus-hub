@@ -11,6 +11,7 @@ import {
   generateTokenCode,
   startOfMonthISO,
 } from "./loyalty.server";
+import { DEFAULT_CAMPAIGNS, type Campaign } from "./loyalty";
 
 const DEFAULT_TIERS = [
   { id: "1", name: "Bronze", min_liters: 0, max_liters: 50, discount_per_liter: 0.05, color: "tier-bronze", sort_order: 1 },
@@ -464,4 +465,111 @@ export const spinWheelServer = createServerFn({ method: "POST" }).handler(async 
     prize: prizes[selectedIndex],
   };
 });
+
+let currentCampaigns: Campaign[] = [...DEFAULT_CAMPAIGNS];
+
+export const getCampaigns = createServerFn({ method: "GET" }).handler(async () => {
+  return currentCampaigns;
+});
+
+export const saveCampaign = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: Partial<Campaign> & { title: string } }) => {
+    if (!data.title) {
+      throw new Error("O título da campanha é obrigatório.");
+    }
+
+    if (data.id) {
+      // Update existing
+      const index = currentCampaigns.findIndex((c) => c.id === data.id);
+      if (index >= 0) {
+        currentCampaigns[index] = {
+          ...currentCampaigns[index],
+          ...data,
+        } as Campaign;
+        return { ok: true, campaign: currentCampaigns[index] };
+      }
+    }
+
+    // Create new campaign
+    const newCamp: Campaign = {
+      id: "camp-" + Date.now(),
+      title: data.title,
+      description: data.description || "",
+      status: (data.status as any) || "active",
+      discountType: data.discountType || "per_liter",
+      discountValue: Number(data.discountValue) || 0.1,
+      minFuelAmount: Number(data.minFuelAmount) || 0,
+      fuelTypes: data.fuelTypes || ["gasolina_comum", "gasolina_aditivada", "etanol"],
+      daysOfWeek: data.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6],
+      startDate: data.startDate || new Date().toISOString().slice(0, 10),
+      endDate: data.endDate || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+      channels: data.channels || { push: true, whatsapp: false, sms: false },
+      messageTitle: data.messageTitle || `Super Oferta: ${data.title}`,
+      messageBody:
+        data.messageBody ||
+        "Olá, {cliente}! Aproveite desconto exclusivo no nosso posto hoje. Apresente seu app!",
+      targetAudience: data.targetAudience || "all",
+      metrics: {
+        messagesSent: 0,
+        fuelingsCount: 0,
+        totalLiters: 0,
+        totalDiscountBrl: 0,
+      },
+      createdAt: new Date().toISOString(),
+    };
+
+    currentCampaigns.unshift(newCamp);
+    return { ok: true, campaign: newCamp };
+  });
+
+export const toggleCampaignStatus = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: { id: string } }) => {
+    const campaign = currentCampaigns.find((c) => c.id === data.id);
+    if (!campaign) {
+      throw new Error("Campanha não encontrada");
+    }
+    campaign.status = campaign.status === "active" ? "paused" : "active";
+    return { ok: true, status: campaign.status };
+  });
+
+export const deleteCampaign = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: { id: string } }) => {
+    currentCampaigns = currentCampaigns.filter((c) => c.id !== data.id);
+    return { ok: true };
+  });
+
+export const sendCampaignDispatch = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: { campaignId: string; channels?: { push?: boolean; whatsapp?: boolean; sms?: boolean } } }) => {
+    const campaign = currentCampaigns.find((c) => c.id === data.campaignId);
+    if (!campaign) {
+      throw new Error("Campanha não encontrada");
+    }
+
+    // Audiência estimada com base no público alvo
+    let baseAudience = 450;
+    if (campaign.targetAudience === "frequent") baseAudience = 280;
+    if (campaign.targetAudience === "inactive") baseAudience = 175;
+    if (campaign.targetAudience === "gold_diamond") baseAudience = 95;
+
+    const channelsToSend = data.channels || campaign.channels;
+    let pushCount = channelsToSend.push ? baseAudience : 0;
+    let whatsCount = channelsToSend.whatsapp ? Math.floor(baseAudience * 0.85) : 0;
+    let smsCount = channelsToSend.sms ? Math.floor(baseAudience * 0.6) : 0;
+    const totalSent = pushCount + whatsCount + smsCount;
+
+    // Atualiza métricas in-memory da campanha
+    campaign.metrics.messagesSent += totalSent;
+
+    return {
+      ok: true,
+      delivered: {
+        total: totalSent,
+        push: pushCount,
+        whatsapp: whatsCount,
+        sms: smsCount,
+      },
+      timestamp: new Date().toISOString(),
+    };
+  });
+
 

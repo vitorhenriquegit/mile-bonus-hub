@@ -92,4 +92,120 @@ export const DEFAULT_WHEEL_PRIZES: WheelPrize[] = [
   { id: "p5", label: "Ducha Grátis", sublabel: "Lava-jato do posto", color: "#8B5CF6", textColor: "#FFFFFF", weight: 10, isWin: true },
   { id: "p6", label: "+R$ 0,10", sublabel: "Desconto/L", color: "#EF4444", textColor: "#FFFFFF", weight: 20, discountPerLiter: 0.10, isWin: true },
 ];
+
+export type Campaign = {
+  id: string;
+  title: string;
+  description: string;
+  status: "active" | "scheduled" | "paused" | "expired";
+  discountType: "per_liter" | "percentage";
+  discountValue: number; // ex: 0.25 para R$ 0,25/L ou 5 para 5%
+  minFuelAmount: number; // ex: R$ 100
+  fuelTypes: string[]; // ex: ["gasolina_comum", "gasolina_aditivada", "etanol", "diesel_s10"]
+  daysOfWeek: number[]; // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  channels: {
+    push: boolean;
+    whatsapp: boolean;
+    sms: boolean;
+  };
+  messageTitle: string;
+  messageBody: string;
+  targetAudience: "all" | "frequent" | "inactive" | "gold_diamond";
+  metrics: {
+    messagesSent: number;
+    fuelingsCount: number;
+    totalLiters: number;
+    totalDiscountBrl: number;
+  };
+  createdAt: string;
+};
+
+export const DEFAULT_CAMPAIGNS: Campaign[] = [
+  {
+    id: "camp-1",
+    title: "Super Quarta do Combustível",
+    description: "Desconto turbinado de R$ 0,25/litro em qualquer abastecimento acima de R$ 120,00 toda quarta-feira.",
+    status: "active",
+    discountType: "per_liter",
+    discountValue: 0.25,
+    minFuelAmount: 120,
+    fuelTypes: ["gasolina_comum", "gasolina_aditivada", "etanol"],
+    daysOfWeek: [3], // Quarta-feira
+    startDate: "2026-03-01",
+    endDate: "2026-12-31",
+    channels: {
+      push: true,
+      whatsapp: true,
+      sms: false,
+    },
+    messageTitle: "⚡ Super Quarta FuelRewards: Economize R$ 0,25/L!",
+    messageBody: "Olá, {cliente}! Hoje é Super Quarta! Abasteça acima de R$ {minimo} e garanta R$ {desconto}/L de desconto imediato. Apresente seu app e aproveite!",
+    targetAudience: "all",
+    metrics: {
+      messagesSent: 1420,
+      fuelingsCount: 386,
+      totalLiters: 15440,
+      totalDiscountBrl: 3860,
+    },
+    createdAt: "2026-03-01T10:00:00Z",
+  },
+  {
+    id: "camp-2",
+    title: "Fim de Semana Premiado 150+",
+    description: "Sábado e Domingo com +R$ 0,20/litro para tanques cheios ou abastecimentos a partir de R$ 150.",
+    status: "active",
+    discountType: "per_liter",
+    discountValue: 0.20,
+    minFuelAmount: 150,
+    fuelTypes: ["gasolina_comum", "gasolina_aditivada", "diesel_s10"],
+    daysOfWeek: [0, 6], // Domingo e Sábado
+    startDate: "2026-03-15",
+    endDate: "2026-06-30",
+    channels: {
+      push: true,
+      whatsapp: true,
+      sms: true,
+    },
+    messageTitle: "🚗 Fim de Semana Premiado: Tanque Cheio com Desconto!",
+    messageBody: "Partiu pegar a estrada? Abastecendo acima de R$ {minimo} neste fim de semana você ganha R$ {desconto}/L de desconto!",
+    targetAudience: "frequent",
+    metrics: {
+      messagesSent: 2150,
+      fuelingsCount: 520,
+      totalLiters: 23400,
+      totalDiscountBrl: 4680,
+    },
+    createdAt: "2026-03-15T08:00:00Z",
+  },
+  {
+    id: "camp-3",
+    title: "Festival do Etanol Limpo",
+    description: "Incentivo ecológico de terça a quinta com 5% de desconto extra no Etanol Hidratado.",
+    status: "paused",
+    discountType: "percentage",
+    discountValue: 5,
+    minFuelAmount: 80,
+    fuelTypes: ["etanol"],
+    daysOfWeek: [2, 3, 4], // Terça, Quarta, Quinta
+    startDate: "2026-04-01",
+    endDate: "2026-05-31",
+    channels: {
+      push: true,
+      whatsapp: false,
+      sms: false,
+    },
+    messageTitle: "🌱 Semana do Etanol: Economia Verde para Você!",
+    messageBody: "Olá {cliente}, abasteça com Etanol acima de R$ {minimo} e ganhe 5% de bônus imediato no seu abastecimento!",
+    targetAudience: "all",
+    metrics: {
+      messagesSent: 890,
+      fuelingsCount: 142,
+      totalLiters: 5680,
+      totalDiscountBrl: 1136,
+    },
+    createdAt: "2026-03-20T14:30:00Z",
+  },
+];
 
