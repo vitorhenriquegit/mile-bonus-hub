@@ -1,4 +1,7 @@
-export function renderErrorPage(): string {
+export function renderErrorPage(debugMessage?: string): string {
+  const debugSection = debugMessage
+    ? `<details style="margin-top:1.5rem;text-align:left"><summary style="cursor:pointer;font-size:0.75rem;color:#6b7280">Detalhes do erro (debug)</summary><pre style="margin-top:0.5rem;background:#f3f4f6;border-radius:0.375rem;padding:1rem;font-size:0.7rem;overflow:auto;white-space:pre-wrap;word-break:break-all;max-height:12rem">${debugMessage.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</pre></details>`
+    : "";
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -24,7 +27,10 @@ export function renderErrorPage(): string {
         <button class="primary" onclick="location.reload()">Try again</button>
         <a class="secondary" href="/">Go home</a>
       </div>
+      ${debugSection}
     </div>
   </body>
 </html>`;
+}
+
 }

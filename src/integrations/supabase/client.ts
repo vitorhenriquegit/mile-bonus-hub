@@ -39,14 +39,15 @@ function createSupabaseClient() {
     process.env.SUPABASE_PUBLISHABLE_KEY ||
     "sb_publishable_uN3ZWmxi4u8P4ZEjf8vK6w_vA3BX9P4";
 
+  const isServer = typeof window === 'undefined';
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {
       fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY),
     },
     auth: {
-      storage: typeof window !== 'undefined' ? localStorage : undefined,
-      persistSession: true,
-      autoRefreshToken: true,
+      storage: isServer ? undefined : localStorage,
+      persistSession: !isServer,
+      autoRefreshToken: !isServer,
     }
   });
 }
