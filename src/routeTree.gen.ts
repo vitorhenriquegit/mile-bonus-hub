@@ -24,6 +24,7 @@ import { Route as AuthenticatedDashboardClientesRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardMonitorRouteImport } from './routes/_authenticated/dashboard.monitor'
 import { Route as AuthenticatedDashboardRegrasRouteImport } from './routes/_authenticated/dashboard.regras'
 import { Route as AuthenticatedDashboardRoletaRouteImport } from './routes/_authenticated/dashboard.roleta'
+import { Route as AuthenticatedDashboardSegurancaRouteImport } from './routes/_authenticated/dashboard.seguranca'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -106,6 +107,12 @@ const AuthenticatedDashboardRoletaRoute =
     path: '/roleta',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardSegurancaRoute =
+  AuthenticatedDashboardSegurancaRouteImport.update({
+    id: '/seguranca',
+    path: '/seguranca',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
   '/dashboard/regras': typeof AuthenticatedDashboardRegrasRoute
   '/dashboard/roleta': typeof AuthenticatedDashboardRoletaRoute
+  '/dashboard/seguranca': typeof AuthenticatedDashboardSegurancaRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
@@ -134,6 +142,7 @@ export interface FileRoutesByTo {
   '/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
   '/dashboard/regras': typeof AuthenticatedDashboardRegrasRoute
   '/dashboard/roleta': typeof AuthenticatedDashboardRoletaRoute
+  '/dashboard/seguranca': typeof AuthenticatedDashboardSegurancaRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
@@ -152,6 +161,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
   '/_authenticated/dashboard/regras': typeof AuthenticatedDashboardRegrasRoute
   '/_authenticated/dashboard/roleta': typeof AuthenticatedDashboardRoletaRoute
+  '/_authenticated/dashboard/seguranca': typeof AuthenticatedDashboardSegurancaRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/dashboard/monitor'
     | '/dashboard/regras'
     | '/dashboard/roleta'
+    | '/dashboard/seguranca'
     | '/app/'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/dashboard/monitor'
     | '/dashboard/regras'
     | '/dashboard/roleta'
+    | '/dashboard/seguranca'
     | '/app'
     | '/dashboard'
   id:
@@ -201,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/monitor'
     | '/_authenticated/dashboard/regras'
     | '/_authenticated/dashboard/roleta'
+    | '/_authenticated/dashboard/seguranca'
     | '/_authenticated/app/'
     | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRoletaRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/seguranca': {
+      id: '/_authenticated/dashboard/seguranca'
+      path: '/seguranca'
+      fullPath: '/dashboard/seguranca'
+      preLoaderRoute: typeof AuthenticatedDashboardSegurancaRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
   }
 }
 
@@ -344,6 +364,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardMonitorRoute: typeof AuthenticatedDashboardMonitorRoute
   AuthenticatedDashboardRegrasRoute: typeof AuthenticatedDashboardRegrasRoute
   AuthenticatedDashboardRoletaRoute: typeof AuthenticatedDashboardRoletaRoute
+  AuthenticatedDashboardSegurancaRoute: typeof AuthenticatedDashboardSegurancaRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
@@ -354,6 +375,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardMonitorRoute: AuthenticatedDashboardMonitorRoute,
     AuthenticatedDashboardRegrasRoute: AuthenticatedDashboardRegrasRoute,
     AuthenticatedDashboardRoletaRoute: AuthenticatedDashboardRoletaRoute,
+    AuthenticatedDashboardSegurancaRoute: AuthenticatedDashboardSegurancaRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 

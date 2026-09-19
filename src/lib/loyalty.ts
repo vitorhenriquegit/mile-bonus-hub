@@ -208,4 +208,297 @@ export const DEFAULT_CAMPAIGNS: Campaign[] = [
     createdAt: "2026-03-20T14:30:00Z",
   },
 ];
+
+export type FraudSeverity = "low" | "medium" | "high" | "critical";
+
+export type FraudIncident = {
+  id: string;
+  ruleCode: "same_customer_high_frequency" | "volume_exceeds_tank" | "attendant_discount_anomaly" | "split_transactions" | "off_hours_spike" | "fuel_mismatch";
+  ruleName: string;
+  severity: FraudSeverity;
+  status: "pending" | "investigating" | "confirmed_fraud" | "false_positive";
+  attendantId: string;
+  attendantName: string;
+  customerName: string;
+  customerCpf: string;
+  stationName: string;
+  pumpNumber: number;
+  occurredAt: string;
+  description: string;
+  evidence: {
+    transactionCount?: number;
+    timeWindowMinutes?: number;
+    totalLiters?: number;
+    fuelType?: string;
+    anomalyRate?: string;
+    discountTotalBrl?: number;
+  };
+};
+
+export type AttendantSecurityProfile = {
+  id: string;
+  name: string;
+  code: string; // Matrícula
+  shift: "Manhã" | "Tarde" | "Noite";
+  status: "active" | "under_review" | "suspended";
+  riskScore: number; // 0 a 100
+  riskLevel: FraudSeverity;
+  totalTransactionsMonth: number;
+  discountTransactionsRate: number; // ex: 68%
+  storeAverageDiscountRate: number; // ex: 32%
+  openIncidentsCount: number;
+  confirmedFraudsCount: number;
+  avatarUrl?: string;
+};
+
+export type SecurityRuleSetting = {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  severity: FraudSeverity;
+  thresholdValue: number;
+  thresholdUnit: string;
+};
+
+export const DEFAULT_SECURITY_RULES: SecurityRuleSetting[] = [
+  {
+    id: "r1",
+    code: "same_customer_high_frequency",
+    name: "Mesmo CPF Abastecendo Acima da Média",
+    description: "Detecta quando o mesmo cliente registra abastecimento mais de N vezes no mesmo dia ou com intervalo curto (suspeita de frentista pontuando em abastecimento de terceiros).",
+    enabled: true,
+    severity: "critical",
+    thresholdValue: 2,
+    thresholdUnit: "abastecimentos/dia",
+  },
+  {
+    id: "r2",
+    code: "volume_exceeds_tank",
+    name: "Volume Acima da Capacidade do Tanque",
+    description: "Alerta transações únicas com litragem improvável para veículos leves sem justificativa de frota.",
+    enabled: true,
+    severity: "high",
+    thresholdValue: 80,
+    thresholdUnit: "litros em 1 abastecimento",
+  },
+  {
+    id: "r3",
+    code: "attendant_discount_anomaly",
+    name: "Concentração Anormal de Descontos por Frentista",
+    description: "Identifica frentistas cuja taxa de concessão de descontos e pontos excede a média dos colegas de turno.",
+    enabled: true,
+    severity: "high",
+    thresholdValue: 40,
+    thresholdUnit: "% acima da média da equipe",
+  },
+  {
+    id: "r4",
+    code: "split_transactions",
+    name: "Fracionamento de Abastecimentos (Split)",
+    description: "Alerta abastecimentos múltiplos consecutivos de valor baixo no mesmo bico para multiplicar giros de roleta.",
+    enabled: true,
+    severity: "medium",
+    thresholdValue: 15,
+    thresholdUnit: "minutos entre abastecimentos no mesmo bico",
+  },
+  {
+    id: "r5",
+    code: "off_hours_spike",
+    name: "Picos de Cupons Fora de Turno / Madrugada",
+    description: "Detecta lançamentos manuais concentrados em horários de movimento mínimo no posto.",
+    enabled: true,
+    severity: "medium",
+    thresholdValue: 4,
+    thresholdUnit: "cupons em 20 min na madrugada",
+  },
+  {
+    id: "r6",
+    code: "fuel_mismatch",
+    name: "Incompatibilidade de Combustível no Mesmo CPF",
+    description: "Alerta alternância incompatível entre Diesel e Etanol/Gasolina na mesma conta de cliente.",
+    enabled: true,
+    severity: "low",
+    thresholdValue: 12,
+    thresholdUnit: "horas entre trocas de tipo",
+  },
+];
+
+export const DEFAULT_ATTENDANTS: AttendantSecurityProfile[] = [
+  {
+    id: "att-1",
+    name: "Marcos Paulo Souza",
+    code: "FR-0104",
+    shift: "Tarde",
+    status: "under_review",
+    riskScore: 88,
+    riskLevel: "critical",
+    totalTransactionsMonth: 420,
+    discountTransactionsRate: 64, // 64% dos abastecimentos dele têm cupom aplicado
+    storeAverageDiscountRate: 28, // média dos outros frentistas é 28%
+    openIncidentsCount: 4,
+    confirmedFraudsCount: 1,
+  },
+  {
+    id: "att-2",
+    name: "Rodrigo Mendonça",
+    code: "FR-0089",
+    shift: "Noite",
+    status: "active",
+    riskScore: 58,
+    riskLevel: "high",
+    totalTransactionsMonth: 310,
+    discountTransactionsRate: 46,
+    storeAverageDiscountRate: 28,
+    openIncidentsCount: 2,
+    confirmedFraudsCount: 0,
+  },
+  {
+    id: "att-3",
+    name: "Cleiton Barbosa",
+    code: "FR-0112",
+    shift: "Manhã",
+    status: "active",
+    riskScore: 18,
+    riskLevel: "low",
+    totalTransactionsMonth: 540,
+    discountTransactionsRate: 27,
+    storeAverageDiscountRate: 28,
+    openIncidentsCount: 0,
+    confirmedFraudsCount: 0,
+  },
+  {
+    id: "att-4",
+    name: "Felipe Andrade",
+    code: "FR-0125",
+    shift: "Manhã",
+    status: "active",
+    riskScore: 22,
+    riskLevel: "low",
+    totalTransactionsMonth: 490,
+    discountTransactionsRate: 29,
+    storeAverageDiscountRate: 28,
+    openIncidentsCount: 0,
+    confirmedFraudsCount: 0,
+  },
+  {
+    id: "att-5",
+    name: "Juliana Santos",
+    code: "FR-0130",
+    shift: "Tarde",
+    status: "active",
+    riskScore: 12,
+    riskLevel: "low",
+    totalTransactionsMonth: 380,
+    discountTransactionsRate: 26,
+    storeAverageDiscountRate: 28,
+    openIncidentsCount: 0,
+    confirmedFraudsCount: 0,
+  },
+];
+
+export const DEFAULT_FRAUD_INCIDENTS: FraudIncident[] = [
+  {
+    id: "inc-101",
+    ruleCode: "same_customer_high_frequency",
+    ruleName: "Mesmo CPF Abastecendo Acima da Média",
+    severity: "critical",
+    status: "pending",
+    attendantId: "att-1",
+    attendantName: "Marcos Paulo Souza (FR-0104)",
+    customerName: "Eduardo Ribeiro (Possível Laranja)",
+    customerCpf: "348.912.448-02",
+    stationName: "Posto Matriz Central",
+    pumpNumber: 4,
+    occurredAt: "2026-09-19T16:42:00Z",
+    description: "O mesmo CPF pontuou 4 vezes hoje no turno da tarde, totalizando 185 litros em 3 horas no bico 4.",
+    evidence: {
+      transactionCount: 4,
+      timeWindowMinutes: 180,
+      totalLiters: 185,
+      discountTotalBrl: 46.25,
+    },
+  },
+  {
+    id: "inc-102",
+    ruleCode: "attendant_discount_anomaly",
+    ruleName: "Taxa de Cupons Fora do Padrão",
+    severity: "high",
+    status: "investigating",
+    attendantId: "att-1",
+    attendantName: "Marcos Paulo Souza (FR-0104)",
+    customerName: "Vários Clientes",
+    customerCpf: "Múltiplos",
+    stationName: "Posto Matriz Central",
+    pumpNumber: 2,
+    occurredAt: "2026-09-19T15:15:00Z",
+    description: "Frentista aplicou desconto de fidelidade em 64% de todos os seus abastecimentos hoje (Média da equipe: 28%).",
+    evidence: {
+      anomalyRate: "+36% acima da média da equipe",
+      discountTotalBrl: 248.5,
+    },
+  },
+  {
+    id: "inc-103",
+    ruleCode: "volume_exceeds_tank",
+    ruleName: "Volume Acima da Capacidade do Tanque",
+    severity: "high",
+    status: "pending",
+    attendantId: "att-2",
+    attendantName: "Rodrigo Mendonça (FR-0089)",
+    customerName: "Lucas Ferreira",
+    customerCpf: "109.832.118-91",
+    stationName: "Posto Matriz Central",
+    pumpNumber: 6,
+    occurredAt: "2026-09-19T14:10:00Z",
+    description: "Abastecimento único de 94 litros de Gasolina Comum registrado para veículo cadastrado como compacto (HB20).",
+    evidence: {
+      totalLiters: 94,
+      fuelType: "Gasolina Comum",
+      discountTotalBrl: 18.8,
+    },
+  },
+  {
+    id: "inc-104",
+    ruleCode: "split_transactions",
+    ruleName: "Fracionamento Suspeito de Abastecimento",
+    severity: "medium",
+    status: "pending",
+    attendantId: "att-1",
+    attendantName: "Marcos Paulo Souza (FR-0104)",
+    customerName: "Carlos Drumont",
+    customerCpf: "772.412.399-55",
+    stationName: "Posto Matriz Central",
+    pumpNumber: 3,
+    occurredAt: "2026-09-19T11:20:00Z",
+    description: "3 abastecimentos de R$ 35,00 realizados no mesmo bico em um intervalo de 8 minutos com desconto de cupom.",
+    evidence: {
+      transactionCount: 3,
+      timeWindowMinutes: 8,
+      discountTotalBrl: 10.5,
+    },
+  },
+  {
+    id: "inc-105",
+    ruleCode: "off_hours_spike",
+    ruleName: "Lançamento em Madrugada com Baixo Fluxo",
+    severity: "medium",
+    status: "false_positive",
+    attendantId: "att-2",
+    attendantName: "Rodrigo Mendonça (FR-0089)",
+    customerName: "Frota Taxi 24h",
+    customerCpf: "554.120.988-34",
+    stationName: "Posto Matriz Central",
+    pumpNumber: 1,
+    occurredAt: "2026-09-19T03:45:00Z",
+    description: "5 abastecimentos registrados entre 03:00 e 04:00 da madrugada com cupons manuais.",
+    evidence: {
+      transactionCount: 5,
+      timeWindowMinutes: 45,
+      discountTotalBrl: 32.0,
+    },
+  },
+];
+
 

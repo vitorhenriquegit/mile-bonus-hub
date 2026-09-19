@@ -11,7 +11,16 @@ import {
   generateTokenCode,
   startOfMonthISO,
 } from "./loyalty.server";
-import { DEFAULT_CAMPAIGNS, type Campaign } from "./loyalty";
+import {
+  DEFAULT_CAMPAIGNS,
+  DEFAULT_SECURITY_RULES,
+  DEFAULT_ATTENDANTS,
+  DEFAULT_FRAUD_INCIDENTS,
+  type Campaign,
+  type FraudIncident,
+  type AttendantSecurityProfile,
+  type SecurityRuleSetting,
+} from "./loyalty";
 
 const DEFAULT_TIERS = [
   { id: "1", name: "Bronze", min_liters: 0, max_liters: 50, discount_per_liter: 0.05, color: "tier-bronze", sort_order: 1 },
@@ -571,5 +580,94 @@ export const sendCampaignDispatch = createServerFn({ method: "POST" })
       timestamp: new Date().toISOString(),
     };
   });
+
+let currentFraudIncidents: FraudIncident[] = [...DEFAULT_FRAUD_INCIDENTS];
+let currentAttendants: AttendantSecurityProfile[] = [...DEFAULT_ATTENDANTS];
+let currentSecurityRules: SecurityRuleSetting[] = [...DEFAULT_SECURITY_RULES];
+
+export const getSecurityOverview = createServerFn({ method: "GET" }).handler(async () => {
+  const pendingIncidents = currentFraudIncidents.filter((i) => i.status === "pending" || i.status === "investigating");
+  const confirmedFrauds = currentFraudIncidents.filter((i) => i.status === "confirmed_fraud");
+  const criticalIncidents = pendingIncidents.filter((i) => i.severity === "critical");
+
+  // Estimativa de prejuízo evitado ou fraudado
+  const estimatedSavings = currentFraudIncidents.reduce((sum, i) => sum + (i.evidence?.discountTotalBrl || 0), 0);
+
+  // Recalcular métricas por frentista
+  const attendantsWithStats = currentAttendants.map((att) => {
+    const attIncidents = currentFraudIncidents.filter((i) => i.attendantId === att.id);
+    const openCount = attIncidents.filter((i) => i.status === "pending" || i.status === "investigating").length;
+    const confirmedCount = attIncidents.filter((i) => i.status === "confirmed_fraud").length;
+
+    // Cálculo dinâmico do score de risco se houver novas fraudes
+    let score = att.riskScore;
+    if (confirmedCount > 0) score = Math.max(score, 85);
+    if (openCount > 2) score = Math.max(score, 70);
+
+    return {
+      ...att,
+      openIncidentsCount: openCount,
+      confirmedFraudsCount: confirmedCount,
+      riskScore: score,
+    };
+  });
+
+  return {
+    kpis: {
+      pendingIncidentsCount: pendingIncidents.length,
+      criticalIncidentsCount: criticalIncidents.length,
+      confirmedFraudsCount: confirmedFrauds.length,
+      attendantsUnderReviewCount: attendantsWithStats.filter((a) => a.status === "under_review" || a.riskScore > 60).length,
+      estimatedProtectedAmount: estimatedSavings * 3.5, // Projeção de prejuízo evitado
+      complianceScore: 94.2, // % de conformidade geral
+    },
+    incidents: currentFraudIncidents,
+    attendants: attendantsWithStats,
+    rules: currentSecurityRules,
+  };
+});
+
+export const updateIncidentStatus = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: { incidentId: string; status: FraudIncident["status"]; notes?: string } }) => {
+    const incident = currentFraudIncidents.find((i) => i.id === data.incidentId);
+    if (!incident) throw new Error("Incidente não encontrado");
+
+    incident.status = data.status;
+
+    // Se confirmada fraude, atualiza o perfil do frentista
+    if (data.status === "confirmed_fraud") {
+      const attendant = currentAttendants.find((a) => a.id === incident.attendantId);
+      if (attendant) {
+        attendant.status = "under_review";
+        attendant.riskScore = Math.min(100, attendant.riskScore + 15);
+        attendant.riskLevel = "critical";
+      }
+    }
+
+    return { ok: true, incident };
+  });
+
+export const updateAttendantStatus = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: { attendantId: string; status: AttendantSecurityProfile["status"] } }) => {
+    const attendant = currentAttendants.find((a) => a.id === data.attendantId);
+    if (!attendant) throw new Error("Frentista não encontrado");
+
+    attendant.status = data.status;
+    return { ok: true, attendant };
+  });
+
+export const updateSecurityRuleSettings = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: { ruleId: string; enabled: boolean; thresholdValue?: number } }) => {
+    const rule = currentSecurityRules.find((r) => r.id === data.ruleId);
+    if (!rule) throw new Error("Regra não encontrada");
+
+    rule.enabled = data.enabled;
+    if (data.thresholdValue !== undefined) {
+      rule.thresholdValue = data.thresholdValue;
+    }
+
+    return { ok: true, rule };
+  });
+
 
 
