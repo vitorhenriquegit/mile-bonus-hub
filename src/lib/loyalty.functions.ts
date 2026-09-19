@@ -203,3 +203,185 @@ export const getDashboardData = createServerFn({ method: "GET" })
       })),
     };
   });
+
+export const getStations = createServerFn({ method: "GET" }).handler(async () => {
+  const supabase = createClient<Database>(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+  );
+  const { data, error } = await supabase.from("stations").select("id,name,city,state,is_active").order("name");
+  if (error) throw error;
+  return data ?? [];
+});
+
+export const lookupCustomerToken = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        query: z.string().min(3),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertStaff(supabase, userId);
+
+    const rawQuery = data.query.trim();
+    const cleanDigits = rawQuery.replace(/\D/g, "");
+
+    let targetUserId: string | null = null;
+    let foundToken: { id: string; code: string; expires_at: string; used_at: string | null } | null = null;
+
+    // 1. Try matching code first if 6 digits or raw token string
+    if (cleanDigits.length === 6) {
+      const { data: tokenData } = await supabase
+        .from("fuel_tokens")
+        .select("id,code,expires_at,used_at,user_id")
+        .eq("code", cleanDigits)
+        .is("used_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+
+      if (tokenData) {
+        foundToken = tokenData;
+        targetUserId = tokenData.user_id;
+      }
+    }
+
+    // 2. If no token found by code, try matching CPF or profile ID
+    if (!targetUserId) {
+      let profileQuery = supabase.from("profiles").select("id,full_name,cpf,phone");
+      if (cleanDigits.length >= 8) {
+        // match CPF containing digits
+        const { data: profiles } = await profileQuery;
+        const matched = (profiles ?? []).find(
+          (p) => (p.cpf ?? "").replace(/\D/g, "") === cleanDigits || (p.cpf ?? "").includes(cleanDigits),
+        );
+        if (matched) {
+          targetUserId = matched.id;
+        }
+      }
+    }
+
+    if (!targetUserId) {
+      throw new Error("Nenhum cliente ou token válido encontrado para a busca.");
+    }
+
+    // If token wasn't found yet, check if user has an active token
+    if (!foundToken) {
+      const { data: tokenData } = await supabase
+        .from("fuel_tokens")
+        .select("id,code,expires_at,used_at,user_id")
+        .eq("user_id", targetUserId)
+        .is("used_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (tokenData) {
+        foundToken = tokenData;
+      }
+    }
+
+    // Get customer profile, tiers, and current month volume
+    const [profileRes, fuelingsRes, tiersRes] = await Promise.all([
+      supabase.from("profiles").select("id,full_name,cpf,phone").eq("id", targetUserId).single(),
+      supabase
+        .from("fuelings")
+        .select("liters")
+        .eq("user_id", targetUserId)
+        .gte("created_at", startOfMonthISO()),
+      supabase.from("tiers").select("id,name,min_liters,max_liters,discount_per_liter,color,sort_order").order("sort_order"),
+    ]);
+
+    if (profileRes.error) throw profileRes.error;
+
+    const volumeMonth = (fuelingsRes.data ?? []).reduce((s, r) => s + (Number(r.liters) || 0), 0);
+    const tiers = (tiersRes.data ?? []) as unknown as any[];
+
+    return {
+      token: foundToken,
+      customer: profileRes.data,
+      volumeMonth,
+      tiers,
+    };
+  });
+
+export const registerFueling = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        tokenId: z.string().uuid().optional(),
+        stationId: z.string().uuid().optional(),
+        fuelType: z.string().min(2),
+        liters: z.number().positive(),
+        pricePerLiter: z.number().positive(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId: staffUserId } = context;
+    await assertStaff(supabase, staffUserId);
+
+    // Get user's monthly volume and tiers to compute current tier discount
+    const [fuelingsRes, tiersRes] = await Promise.all([
+      supabase
+        .from("fuelings")
+        .select("liters")
+        .eq("user_id", data.userId)
+        .gte("created_at", startOfMonthISO()),
+      supabase.from("tiers").select("id,name,min_liters,max_liters,discount_per_liter,sort_order").order("sort_order"),
+    ]);
+
+    if (tiersRes.error) throw tiersRes.error;
+
+    const volumeMonth = (fuelingsRes.data ?? []).reduce((s, r) => s + (Number(r.liters) || 0), 0);
+    const sortedTiers = (tiersRes.data ?? []).sort((a, b) => a.sort_order - b.sort_order);
+
+    const currentTier =
+      sortedTiers.find((t) => volumeMonth >= Number(t.min_liters) && volumeMonth <= Number(t.max_liters)) ??
+      sortedTiers[0];
+
+    const discountPerLiter = Number(currentTier?.discount_per_liter ?? 0);
+    const discountTotal = Math.round(data.liters * discountPerLiter * 100) / 100;
+    const originalTotal = Math.round(data.liters * data.pricePerLiter * 100) / 100;
+    const finalTotal = Math.max(0, Math.round((originalTotal - discountTotal) * 100) / 100);
+
+    // Insert fueling record
+    const { data: insertedFueling, error: insertErr } = await supabase
+      .from("fuelings")
+      .insert({
+        user_id: data.userId,
+        station_id: data.stationId || null,
+        fuel_type: data.fuelType,
+        liters: data.liters,
+        discount_total: discountTotal,
+        total: finalTotal,
+        status: "completed",
+      })
+      .select("id,created_at")
+      .single();
+
+    if (insertErr) throw insertErr;
+
+    // If tokenId provided, consume token
+    if (data.tokenId) {
+      await supabase
+        .from("fuel_tokens")
+        .update({ used_at: new Date().toISOString() })
+        .eq("id", data.tokenId);
+    }
+
+    return {
+      ok: true,
+      fuelingId: insertedFueling.id,
+      discountPerLiter,
+      discountTotal,
+      originalTotal,
+      finalTotal,
+    };
+  });

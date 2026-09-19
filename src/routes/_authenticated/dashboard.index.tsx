@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import {
   Fuel,
   Percent,
@@ -11,6 +12,9 @@ import {
   XCircle,
   SlidersHorizontal,
   Loader2,
+  Download,
+  ShieldCheck,
+  X,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -24,7 +28,8 @@ import {
   Legend,
 } from "recharts";
 import { getDashboardData, getTiers } from "@/lib/loyalty.functions";
-import { formatBRL, maskCpf, type Tier } from "@/lib/loyalty";
+import { exportToCsv, formatBRL, maskCpf, type Tier } from "@/lib/loyalty";
+import { AttendantTerminal } from "@/components/AttendantTerminal";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
   head: () => ({
@@ -41,6 +46,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/")({
 });
 
 function Overview() {
+  const [showTerminalModal, setShowTerminalModal] = useState(false);
   const dashFn = useServerFn(getDashboardData);
   const tiersFn = useServerFn(getTiers);
   const dash = useQuery({ queryKey: ["dashboard"], queryFn: () => dashFn({}) });
@@ -66,6 +72,20 @@ function Overview() {
   const tiers = (tiersQuery.data ?? []) as unknown as Tier[];
   const avgDiscount = m.volumeMonth > 0 ? m.discountsGranted / m.volumeMonth : 0;
 
+  const handleExportCsv = () => {
+    const headers = ["ID", "Data", "Cliente/CPF", "Combustível", "Volume (L)", "Desconto Total (R$)", "Total Pago (R$)"];
+    const rows = dash.data!.recent.map((tx) => [
+      tx.id,
+      new Date(tx.created_at).toLocaleString("pt-BR"),
+      tx.customerName || maskCpf(tx.customerCpf),
+      tx.fuel_type,
+      Number(tx.liters).toFixed(1),
+      Number(tx.discount_total).toFixed(2),
+      Number(tx.total).toFixed(2),
+    ]);
+    exportToCsv("relatorio_abastecimentos_fuelrewards", headers, rows);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -75,11 +95,42 @@ function Overview() {
             Performance do programa de fidelidade · dados do mês corrente
           </p>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium shadow-card">
-          <Calendar className="h-4 w-4" />
-          Últimos 30 dias
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowTerminalModal(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-90"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Validar Token de Frentista
+          </button>
+          <button
+            onClick={handleExportCsv}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted shadow-card"
+          >
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </button>
+          <span className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium shadow-card text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            Últimos 30 dias
+          </span>
+        </div>
       </div>
+
+      {showTerminalModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowTerminalModal(false)}
+              className="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-lg bg-muted text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <AttendantTerminal onSuccess={() => setShowTerminalModal(false)} />
+          </div>
+        </div>
+      )}
+
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi

@@ -9,64 +9,63 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
-import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
-import { Route as AuthenticatedDashboardRegrasRouteImport } from './routes/_authenticated/dashboard.regras'
-import { Route as AuthenticatedDashboardMonitorRouteImport } from './routes/_authenticated/dashboard.monitor'
-import { Route as AuthenticatedDashboardClientesRouteImport } from './routes/_authenticated/dashboard.clientes'
-import { Route as AuthenticatedAppTokenRouteImport } from './routes/_authenticated/app.token'
 import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
+import { Route as AuthenticatedAppTokenRouteImport } from './routes/_authenticated/app.token'
+import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedDashboardClientesRouteImport } from './routes/_authenticated/dashboard.clientes'
+import { Route as AuthenticatedDashboardMonitorRouteImport } from './routes/_authenticated/dashboard.monitor'
+import { Route as AuthenticatedDashboardRegrasRouteImport } from './routes/_authenticated/dashboard.regras'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDashboardIndexRoute =
-  AuthenticatedDashboardIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedDashboardRegrasRoute =
-  AuthenticatedDashboardRegrasRouteImport.update({
-    id: '/regras',
-    path: '/regras',
-    getParentRoute: () => AuthenticatedDashboardRoute,
+const AuthenticatedAppHistoricoRoute =
+  AuthenticatedAppHistoricoRouteImport.update({
+    id: '/historico',
+    path: '/historico',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedDashboardMonitorRoute =
-  AuthenticatedDashboardMonitorRouteImport.update({
-    id: '/monitor',
-    path: '/monitor',
+const AuthenticatedAppTokenRoute = AuthenticatedAppTokenRouteImport.update({
+  id: '/token',
+  path: '/token',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedDashboardIndexRoute =
+  AuthenticatedDashboardIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardClientesRoute =
@@ -75,16 +74,17 @@ const AuthenticatedDashboardClientesRoute =
     path: '/clientes',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedAppTokenRoute = AuthenticatedAppTokenRouteImport.update({
-  id: '/token',
-  path: '/token',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppHistoricoRoute =
-  AuthenticatedAppHistoricoRouteImport.update({
-    id: '/historico',
-    path: '/historico',
-    getParentRoute: () => AuthenticatedAppRoute,
+const AuthenticatedDashboardMonitorRoute =
+  AuthenticatedDashboardMonitorRouteImport.update({
+    id: '/monitor',
+    path: '/monitor',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardRegrasRoute =
+  AuthenticatedDashboardRegrasRouteImport.update({
+    id: '/regras',
+    path: '/regras',
+    getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -175,11 +175,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -189,19 +189,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app': {
       id: '/_authenticated/app'
@@ -210,12 +203,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/dashboard/': {
-      id: '/_authenticated/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
@@ -224,18 +217,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/dashboard/regras': {
-      id: '/_authenticated/dashboard/regras'
-      path: '/regras'
-      fullPath: '/dashboard/regras'
-      preLoaderRoute: typeof AuthenticatedDashboardRegrasRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
+    '/_authenticated/app/historico': {
+      id: '/_authenticated/app/historico'
+      path: '/historico'
+      fullPath: '/app/historico'
+      preLoaderRoute: typeof AuthenticatedAppHistoricoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/dashboard/monitor': {
-      id: '/_authenticated/dashboard/monitor'
-      path: '/monitor'
-      fullPath: '/dashboard/monitor'
-      preLoaderRoute: typeof AuthenticatedDashboardMonitorRouteImport
+    '/_authenticated/app/token': {
+      id: '/_authenticated/app/token'
+      path: '/token'
+      fullPath: '/app/token'
+      preLoaderRoute: typeof AuthenticatedAppTokenRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/dashboard/': {
+      id: '/_authenticated/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/clientes': {
@@ -245,19 +245,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardClientesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/app/token': {
-      id: '/_authenticated/app/token'
-      path: '/token'
-      fullPath: '/app/token'
-      preLoaderRoute: typeof AuthenticatedAppTokenRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
+    '/_authenticated/dashboard/monitor': {
+      id: '/_authenticated/dashboard/monitor'
+      path: '/monitor'
+      fullPath: '/dashboard/monitor'
+      preLoaderRoute: typeof AuthenticatedDashboardMonitorRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/app/historico': {
-      id: '/_authenticated/app/historico'
-      path: '/historico'
-      fullPath: '/app/historico'
-      preLoaderRoute: typeof AuthenticatedAppHistoricoRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
+    '/_authenticated/dashboard/regras': {
+      id: '/_authenticated/dashboard/regras'
+      path: '/regras'
+      fullPath: '/dashboard/regras'
+      preLoaderRoute: typeof AuthenticatedDashboardRegrasRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
   }
 }
@@ -318,3 +318,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

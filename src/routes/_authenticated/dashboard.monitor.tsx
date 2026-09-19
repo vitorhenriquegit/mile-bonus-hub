@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Activity, Gauge, Timer, Loader2 } from "lucide-react";
 import { getDashboardData } from "@/lib/loyalty.functions";
 import { formatBRL, maskCpf } from "@/lib/loyalty";
+import { AttendantTerminal } from "@/components/AttendantTerminal";
 
 export const Route = createFileRoute("/_authenticated/dashboard/monitor")({
   head: () => ({
@@ -55,6 +56,8 @@ function Monitor() {
           Abastecimentos validados pelo app · atualização automática
         </p>
       </div>
+
+      <AttendantTerminal />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat

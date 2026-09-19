@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Download } from "lucide-react";
 import { getDashboardData, getTiers } from "@/lib/loyalty.functions";
-import { maskCpf, relativeDay, tierFor, type Tier } from "@/lib/loyalty";
+import { exportToCsv, maskCpf, relativeDay, tierFor, type Tier } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/dashboard/clientes")({
   head: () => ({
@@ -38,6 +38,15 @@ function Customers() {
     );
   }, [customers, term]);
 
+  const handleExportCsv = () => {
+    const headers = ["ID", "Nome Completo", "CPF", "Volume no Mês (L)", "Nível Atual", "Última Visita"];
+    const rows = filtered.map((c) => {
+      const { current } = tierFor(c.volume, tiers);
+      return [c.id, c.name, maskCpf(c.cpf), c.volume.toFixed(1), current.name, c.lastVisit || "Nunca"];
+    });
+    exportToCsv("base_clientes_fuelrewards", headers, rows);
+  };
+
   if (dash.isLoading) {
     return (
       <div className="grid min-h-[50vh] place-items-center text-muted-foreground">
@@ -56,11 +65,20 @@ function Customers() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
-        <p className="text-sm text-muted-foreground">
-          {customers.length} motoristas cadastrados no programa.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
+          <p className="text-sm text-muted-foreground">
+            {customers.length} motoristas cadastrados no programa.
+          </p>
+        </div>
+        <button
+          onClick={handleExportCsv}
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted shadow-card"
+        >
+          <Download className="h-4 w-4" />
+          Exportar Base (CSV)
+        </button>
       </div>
 
       <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-card">
@@ -72,6 +90,7 @@ function Customers() {
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
       </div>
+
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         <table className="w-full text-sm">
