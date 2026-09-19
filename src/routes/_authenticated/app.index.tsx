@@ -39,9 +39,11 @@ function HomeScreen() {
   const saved = overview.data?.savedMonth ?? 0;
   const firstName = (overview.data?.profile?.full_name || "Motorista").split(" ")[0];
   const { current, next, isMax } = tierFor(volume, tiers);
-  const litersToNext = Math.max(0, next.min_liters - volume);
-  const span = next.min_liters - current.min_liters || 1;
-  const progress = Math.min(100, Math.max(0, Math.round(((volume - current.min_liters) / span) * 100)));
+  const nextMinLiters = next?.min_liters ?? 50;
+  const currentMinLiters = current?.min_liters ?? 0;
+  const litersToNext = Math.max(0, nextMinLiters - volume);
+  const span = Math.max(1, nextMinLiters - currentMinLiters);
+  const progress = Math.min(100, Math.max(0, Math.round(((volume - currentMinLiters) / span) * 100)));
 
   return (
     <div className="flex flex-col gap-5 px-5 pt-6">

@@ -44,11 +44,10 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       const token = authHeader.replace('Bearer ', '');
       if (token && token.split('.').length === 3) {
         try {
-          const tempSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-          const { data } = await tempSupabase.auth.getClaims(token);
-          if (data?.claims?.sub) {
-            userId = data.claims.sub;
-            claims = data.claims;
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (payload?.sub) {
+            userId = payload.sub;
+            claims = payload;
           }
         } catch {
           // ignore error and fallback to demo user
