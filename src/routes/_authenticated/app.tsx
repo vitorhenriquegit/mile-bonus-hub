@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Home, Ticket, ReceiptText, LogOut } from "lucide-react";
+import { Home, Ticket, ReceiptText, Sparkles, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -21,6 +21,7 @@ function AppShell() {
 
   const tabs = [
     { to: "/app", label: "Início", icon: Home },
+    { to: "/app/roleta", label: "Roleta", icon: Sparkles },
     { to: "/app/token", label: "Token", icon: Ticket },
     { to: "/app/historico", label: "Histórico", icon: ReceiptText },
   ] as const;
@@ -40,7 +41,7 @@ function AppShell() {
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md border-t border-border bg-card/95 backdrop-blur">
-          <ul className="grid grid-cols-3">
+          <ul className="grid grid-cols-4">
             {tabs.map((t) => {
               const active = pathname === t.to;
               const Icon = t.icon;
@@ -49,7 +50,7 @@ function AppShell() {
                   <Link
                     to={t.to}
                     className={`flex flex-col items-center gap-1 py-3 text-xs font-medium transition ${
-                      active ? "text-primary" : "text-muted-foreground"
+                      active ? "text-primary font-bold" : "text-muted-foreground"
                     }`}
                   >
                     <Icon className="h-5 w-5" />

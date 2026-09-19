@@ -21,6 +21,7 @@ import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardClientesRouteImport } from './routes/_authenticated/dashboard.clientes'
 import { Route as AuthenticatedDashboardMonitorRouteImport } from './routes/_authenticated/dashboard.monitor'
 import { Route as AuthenticatedDashboardRegrasRouteImport } from './routes/_authenticated/dashboard.regras'
+import { Route as AuthenticatedDashboardRoletaRouteImport } from './routes/_authenticated/dashboard.roleta'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -86,6 +87,12 @@ const AuthenticatedDashboardRegrasRoute =
     path: '/regras',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardRoletaRoute =
+  AuthenticatedDashboardRoletaRouteImport.update({
+    id: '/roleta',
+    path: '/roleta',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/clientes': typeof AuthenticatedDashboardClientesRoute
   '/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
   '/dashboard/regras': typeof AuthenticatedDashboardRegrasRoute
+  '/dashboard/roleta': typeof AuthenticatedDashboardRoletaRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
@@ -108,6 +116,7 @@ export interface FileRoutesByTo {
   '/dashboard/clientes': typeof AuthenticatedDashboardClientesRoute
   '/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
   '/dashboard/regras': typeof AuthenticatedDashboardRegrasRoute
+  '/dashboard/roleta': typeof AuthenticatedDashboardRoletaRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
@@ -123,6 +132,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/clientes': typeof AuthenticatedDashboardClientesRoute
   '/_authenticated/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
   '/_authenticated/dashboard/regras': typeof AuthenticatedDashboardRegrasRoute
+  '/_authenticated/dashboard/roleta': typeof AuthenticatedDashboardRoletaRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/dashboard/clientes'
     | '/dashboard/monitor'
     | '/dashboard/regras'
+    | '/dashboard/roleta'
     | '/app/'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/dashboard/clientes'
     | '/dashboard/monitor'
     | '/dashboard/regras'
+    | '/dashboard/roleta'
     | '/app'
     | '/dashboard'
   id:
@@ -163,6 +175,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/clientes'
     | '/_authenticated/dashboard/monitor'
     | '/_authenticated/dashboard/regras'
+    | '/_authenticated/dashboard/roleta'
     | '/_authenticated/app/'
     | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
@@ -259,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRegrasRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/roleta': {
+      id: '/_authenticated/dashboard/roleta'
+      path: '/roleta'
+      fullPath: '/dashboard/roleta'
+      preLoaderRoute: typeof AuthenticatedDashboardRoletaRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
   }
 }
 
@@ -281,6 +301,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardClientesRoute: typeof AuthenticatedDashboardClientesRoute
   AuthenticatedDashboardMonitorRoute: typeof AuthenticatedDashboardMonitorRoute
   AuthenticatedDashboardRegrasRoute: typeof AuthenticatedDashboardRegrasRoute
+  AuthenticatedDashboardRoletaRoute: typeof AuthenticatedDashboardRoletaRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
@@ -289,6 +310,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardClientesRoute: AuthenticatedDashboardClientesRoute,
     AuthenticatedDashboardMonitorRoute: AuthenticatedDashboardMonitorRoute,
     AuthenticatedDashboardRegrasRoute: AuthenticatedDashboardRegrasRoute,
+    AuthenticatedDashboardRoletaRoute: AuthenticatedDashboardRoletaRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 

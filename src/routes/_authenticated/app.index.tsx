@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, Fuel, Zap, TrendingUp, Loader2 } from "lucide-react";
+import { Bell, Fuel, Zap, TrendingUp, Loader2, Sparkles, Gift } from "lucide-react";
 import { getMyOverview, getTiers } from "@/lib/loyalty.functions";
 import { formatBRL, tierFor, type Tier } from "@/lib/loyalty";
 
@@ -114,6 +114,25 @@ function HomeScreen() {
         className="rounded-2xl bg-primary px-5 py-4 text-center text-sm font-semibold text-primary-foreground shadow-float"
       >
         Gerar token de abastecimento
+      </Link>
+
+      {/* Lucky Wheel Promo Card */}
+      <Link
+        to="/app/roleta"
+        className="flex items-center justify-between rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 shadow-card transition hover:scale-[1.01]"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500 text-white shadow-sm">
+            <Gift className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+              <Sparkles className="h-3 w-3" /> Roleta da Sorte
+            </p>
+            <p className="text-sm font-bold">Gire e ganhe prêmios hoje!</p>
+          </div>
+        </div>
+        <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Girar →</span>
       </Link>
 
       <div className="rounded-2xl border border-border bg-card p-4">

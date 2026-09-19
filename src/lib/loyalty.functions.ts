@@ -421,4 +421,48 @@ export const registerFueling = createServerFn({ method: "POST" })
       originalTotal,
       finalTotal,
     };
-  });
+  });
+
+let currentWheelPrizes: any[] = [
+  { id: "p1", label: "+R$ 0,15", sublabel: "Desconto/L", color: "#3B82F6", textColor: "#FFFFFF", weight: 25, discountPerLiter: 0.15, isWin: true },
+  { id: "p2", label: "Café Grátis", sublabel: "Na Conveniência", color: "#F59E0B", textColor: "#FFFFFF", weight: 15, isWin: true },
+  { id: "p3", label: "+R$ 0,20", sublabel: "Desconto/L", color: "#10B981", textColor: "#FFFFFF", weight: 10, discountPerLiter: 0.20, isWin: true },
+  { id: "p4", label: "Tente de Novo", sublabel: "Mais sorte na próxima", color: "#6B7280", textColor: "#FFFFFF", weight: 20, isWin: false },
+  { id: "p5", label: "Ducha Grátis", sublabel: "Lava-jato do posto", color: "#8B5CF6", textColor: "#FFFFFF", weight: 10, isWin: true },
+  { id: "p6", label: "+R$ 0,10", sublabel: "Desconto/L", color: "#EF4444", textColor: "#FFFFFF", weight: 20, discountPerLiter: 0.10, isWin: true },
+];
+
+export const getWheelPrizes = createServerFn({ method: "GET" }).handler(async () => {
+  return currentWheelPrizes;
+});
+
+export const saveWheelPrizes = createServerFn({ method: "POST" })
+  .validator((data: any) => data)
+  .handler(async ({ data }) => {
+    if (Array.isArray(data) && data.length > 0) {
+      currentWheelPrizes = data;
+    }
+    return { ok: true, prizes: currentWheelPrizes };
+  });
+
+export const spinWheelServer = createServerFn({ method: "POST" }).handler(async () => {
+  const prizes = currentWheelPrizes.length > 0 ? currentWheelPrizes : [];
+  const totalWeight = prizes.reduce((acc, p) => acc + (p.weight || 1), 0) || 1;
+  let random = Math.random() * totalWeight;
+
+  let selectedIndex = 0;
+  for (let i = 0; i < prizes.length; i++) {
+    const weight = prizes[i].weight || 1;
+    if (random < weight) {
+      selectedIndex = i;
+      break;
+    }
+    random -= weight;
+  }
+
+  return {
+    prizeIndex: selectedIndex,
+    prize: prizes[selectedIndex],
+  };
+});
+
