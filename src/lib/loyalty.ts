@@ -85,12 +85,12 @@ export type WheelPrize = {
 };
 
 export const DEFAULT_WHEEL_PRIZES: WheelPrize[] = [
-  { id: "p1", label: "+R$ 0,15", sublabel: "Desconto/L", color: "#3B82F6", textColor: "#FFFFFF", weight: 25, discountPerLiter: 0.15, isWin: true },
-  { id: "p2", label: "Café Grátis", sublabel: "Na Conveniência", color: "#F59E0B", textColor: "#FFFFFF", weight: 15, isWin: true },
-  { id: "p3", label: "+R$ 0,20", sublabel: "Desconto/L", color: "#10B981", textColor: "#FFFFFF", weight: 10, discountPerLiter: 0.20, isWin: true },
-  { id: "p4", label: "Tente de Novo", sublabel: "Mais sorte na próxima", color: "#6B7280", textColor: "#FFFFFF", weight: 20, isWin: false },
-  { id: "p5", label: "Ducha Grátis", sublabel: "Lava-jato do posto", color: "#8B5CF6", textColor: "#FFFFFF", weight: 10, isWin: true },
-  { id: "p6", label: "+R$ 0,10", sublabel: "Desconto/L", color: "#EF4444", textColor: "#FFFFFF", weight: 20, discountPerLiter: 0.10, isWin: true },
+  { id: "p1", label: "+R$ 0,15", sublabel: "Desconto / L", color: "#2563EB", textColor: "#FFFFFF", weight: 25, discountPerLiter: 0.15, isWin: true },
+  { id: "p2", label: "Café Grátis", sublabel: "Na Conveniência", color: "#D97706", textColor: "#FFFFFF", weight: 15, isWin: true },
+  { id: "p3", label: "+R$ 0,20", sublabel: "Super Bônus / L", color: "#059669", textColor: "#FFFFFF", weight: 10, discountPerLiter: 0.20, isWin: true },
+  { id: "p4", label: "Tente de Novo", sublabel: "Mais sorte amanhã", color: "#475569", textColor: "#FFFFFF", weight: 20, isWin: false },
+  { id: "p5", label: "Ducha Grátis", sublabel: "Lava-jato do Posto", color: "#7C3AED", textColor: "#FFFFFF", weight: 10, isWin: true },
+  { id: "p6", label: "+R$ 0,10", sublabel: "Desconto / L", color: "#DC2626", textColor: "#FFFFFF", weight: 20, discountPerLiter: 0.10, isWin: true },
 ];
 
 export type Campaign = {

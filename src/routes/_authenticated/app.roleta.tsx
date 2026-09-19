@@ -55,87 +55,111 @@ function MobileRoletaScreen() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col px-5 pt-6 pb-24 bg-background">
+    <div className="relative flex min-h-screen flex-col px-5 pt-6 pb-24 bg-gradient-to-b from-background via-card/50 to-background overflow-hidden">
+      {/* Background Decorative Glow */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      {/* Top Bar */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate({ to: "/app" })}
-          className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-card"
+          className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-card/80 backdrop-blur shadow-xs transition hover:bg-muted"
           aria-label="Voltar"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <span className="text-sm font-bold flex items-center gap-1.5 text-amber-500">
-          <Sparkles className="h-4 w-4" /> Roleta da Sorte
+        <span className="text-sm font-extrabold flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
+          <Sparkles className="h-4 w-4 text-amber-500" /> Roleta da Sorte
         </span>
         <div className="w-10" />
       </div>
 
-      <div className="mt-6 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-          <Gift className="h-3.5 w-3.5" /> Prêmios Diários na Bomba
-        </span>
-        <h1 className="mt-3 text-2xl font-black tracking-tight">Gire e Ganhe!</h1>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Sorteie bônus de desconto por litro ou brindes exclusivos da conveniência.
+      {/* Hero Header */}
+      <div className="mt-5 text-center space-y-1.5">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-amber-500/20 border border-amber-500/30 px-3.5 py-1 text-xs font-black text-amber-600 dark:text-amber-400 shadow-xs">
+          <Gift className="h-3.5 w-3.5 animate-bounce" /> Giro Diário Disponível!
+        </div>
+        <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+          Gire e Ganhe Prêmios
+        </h1>
+        <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+          Prêmios imediatos de desconto por litro e brindes direto no seu abastecimento!
         </p>
       </div>
 
       {/* Center Canvas Spin Wheel */}
-      <div className="my-8 flex flex-col items-center justify-center">
+      <div className="my-6 flex flex-col items-center justify-center relative">
         <SpinWheel
           prizes={prizes}
           mustSpin={mustSpin}
           targetIndex={targetIndex}
           onStopSpinning={handleStopSpinning}
-          size={300}
+          size={310}
         />
       </div>
 
+      {/* Bottom Controls */}
       <div className="mt-auto space-y-3">
+        <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-card p-3 text-center text-xs">
+          <p className="text-muted-foreground">
+            🎯 Todos os giros têm prêmio garantido para o seu próximo abastecimento.
+          </p>
+        </div>
+
         <button
           onClick={() => spinMutation.mutate()}
           disabled={mustSpin || spinMutation.isPending}
-          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 text-base font-bold text-white shadow-float hover:opacity-95 disabled:opacity-50 transition active:scale-[0.99]"
+          className="w-full relative overflow-hidden flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 px-6 py-4 text-base font-black text-slate-950 shadow-xl shadow-amber-500/25 hover:opacity-95 disabled:opacity-50 transition active:scale-[0.98] cursor-pointer"
         >
           {spinMutation.isPending ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : mustSpin ? (
-            <RefreshCw className="h-5 w-5 animate-spin" />
+            <RefreshCw className="h-5 w-5 animate-spin text-slate-950" />
           ) : (
-            <Sparkles className="h-5 w-5" />
+            <Sparkles className="h-5 w-5 text-slate-950 animate-spin" style={{ animationDuration: "3s" }} />
           )}
-          {mustSpin ? "Girando..." : "Girar Roleta Grátis"}
+          <span className="tracking-wide uppercase text-sm font-black">
+            {mustSpin ? "Girando a Roleta..." : "Girar Roleta Grátis"}
+          </span>
         </button>
       </div>
 
       {/* Winner Celebration Modal */}
       {showWinnerModal && wonPrize && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-5 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-sm rounded-3xl border border-border bg-card p-6 text-center shadow-float space-y-4">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-amber-500 text-white shadow-lg">
-              {wonPrize.isWin ? <Trophy className="h-8 w-8" /> : <Gift className="h-8 w-8" />}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-sm rounded-3xl border border-amber-500/40 bg-card p-6 text-center shadow-2xl space-y-4 overflow-hidden">
+            {/* Modal Glow Header */}
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-40 h-40 bg-amber-500/25 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/30">
+              {wonPrize.isWin ? <Trophy className="h-10 w-10 animate-bounce" /> : <Gift className="h-10 w-10" />}
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-amber-500">
-                {wonPrize.isWin ? "🎉 Parabéns! Você ganhou!" : "Resultado do Sorteio"}
-              </p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight">{wonPrize.label}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{wonPrize.sublabel}</p>
+              <span className="inline-block rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                {wonPrize.isWin ? "🎉 Parabéns! Você foi Premiado!" : "Resultado da Roleta"}
+              </span>
+              <h2 className="mt-2 text-2xl font-black tracking-tight text-foreground">{wonPrize.label}</h2>
+              <p className="mt-1 text-sm font-semibold text-muted-foreground">{wonPrize.sublabel}</p>
             </div>
 
             {wonPrize.isWin && (
-              <div className="rounded-2xl bg-accent p-3 text-xs text-muted-foreground flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                <span>O bônus foi adicionado à sua conta para o próximo abastecimento!</span>
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-muted-foreground flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
+                  O benefício foi ativado! Gere seu token de abastecimento para utilizar.
+                </span>
               </div>
             )}
 
             <button
-              onClick={() => setShowWinnerModal(false)}
-              className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-card hover:opacity-90"
+              onClick={() => {
+                setShowWinnerModal(false);
+                navigate({ to: "/app/token" });
+              }}
+              className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-black text-slate-950 shadow-md hover:opacity-90 transition active:scale-95"
             >
-              Resgatar e Continuar
+              Resgatar na Bomba →
             </button>
           </div>
         </div>
