@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, Fuel, Zap, TrendingUp, Loader2, Sparkles, Gift } from "lucide-react";
-import { getMyOverview, getTiers } from "@/lib/loyalty.functions";
+import { Bell, Fuel, Zap, TrendingUp, Loader2, Sparkles, Gift, Flame, ArrowRight } from "lucide-react";
+import { getMyOverview, getTiers, getActiveCustomerCampaigns } from "@/lib/loyalty.functions";
 import { formatBRL, tierFor, type Tier } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -21,11 +21,14 @@ export const Route = createFileRoute("/_authenticated/app/")({
 });
 
 function HomeScreen() {
+  const navigate = useNavigate();
   const overviewFn = useServerFn(getMyOverview);
   const tiersFn = useServerFn(getTiers);
+  const campaignsFn = useServerFn(getActiveCustomerCampaigns);
 
   const overview = useQuery({ queryKey: ["my-overview"], queryFn: () => overviewFn({}) });
   const tiersQuery = useQuery({ queryKey: ["tiers"], queryFn: () => tiersFn({}) });
+  const campaignsQuery = useQuery({ queryKey: ["customer-campaigns"], queryFn: () => campaignsFn({}) });
 
   if (overview.isLoading || tiersQuery.isLoading) {
     return (
@@ -111,6 +114,75 @@ function HomeScreen() {
         <StatCard label="Volume no mês" value={`${volume.toFixed(0)}L`} icon={<Fuel className="h-4 w-4" />} />
         <StatCard label="Economizado" value={formatBRL(saved)} icon={<TrendingUp className="h-4 w-4" />} accent />
       </div>
+
+      {/* Campanhas Promocionais Vigentes */}
+      {campaignsQuery.data && campaignsQuery.data.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Flame className="h-4 w-4 text-amber-500" />
+              <h2 className="text-sm font-bold text-foreground">Campanhas & Descontos</h2>
+            </div>
+            <Link to="/app/ofertas" className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
+              Ver todas <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="space-y-2.5">
+            {campaignsQuery.data.slice(0, 2).map((camp: any) => {
+              const isToday = camp.isTodayActive;
+              const discountText =
+                camp.discountType === "per_liter"
+                  ? `+${formatBRL(camp.discountValue)}/L`
+                  : `${camp.discountValue}% OFF`;
+
+              return (
+                <div
+                  key={camp.id}
+                  className={`relative overflow-hidden rounded-2xl border p-4 shadow-card transition ${
+                    isToday
+                      ? "border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-card"
+                      : "border-border bg-card"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    {isToday ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Válido Hoje!
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        Dias Selecionados
+                      </span>
+                    )}
+                    <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-black text-primary">
+                      {discountText}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-1.5 text-sm font-bold text-foreground leading-snug">{camp.title}</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{camp.description}</p>
+
+                  <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
+                    <span className="text-xs text-muted-foreground">
+                      Mínimo: <strong className="text-foreground">{camp.minFuelAmount > 0 ? formatBRL(camp.minFuelAmount) : "Livre"}</strong>
+                    </span>
+
+                    <button
+                      onClick={() => navigate({ to: "/app/ofertas" })}
+                      className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-xs transition hover:bg-primary/90"
+                    >
+                      <Zap className="h-3 w-3" />
+                      {camp.minFuelAmount > 0 ? `Abastecer ${formatBRL(camp.minFuelAmount)}` : "Abastecer"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <Link
         to="/app/token"

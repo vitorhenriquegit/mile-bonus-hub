@@ -481,6 +481,23 @@ export const getCampaigns = createServerFn({ method: "GET" }).handler(async () =
   return currentCampaigns;
 });
 
+export const getActiveCustomerCampaigns = createServerFn({ method: "GET" }).handler(async () => {
+  const todayDay = new Date().getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  const todayISO = new Date().toISOString().slice(0, 10);
+
+  const active = currentCampaigns.filter((c) => {
+    if (c.status !== "active") return false;
+    if (c.startDate && todayISO < c.startDate) return false;
+    if (c.endDate && todayISO > c.endDate) return false;
+    return true;
+  });
+
+  return active.map((c) => ({
+    ...c,
+    isTodayActive: c.daysOfWeek.includes(todayDay),
+  })).sort((a, b) => (b.isTodayActive ? 1 : 0) - (a.isTodayActive ? 1 : 0));
+});
+
 export const saveCampaign = createServerFn({ method: "POST" })
   .handler(async ({ data }: { data: Partial<Campaign> & { title: string } }) => {
     if (!data.title) {

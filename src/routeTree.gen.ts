@@ -16,6 +16,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
+import { Route as AuthenticatedAppOfertasRouteImport } from './routes/_authenticated/app.ofertas'
 import { Route as AuthenticatedAppRoletaRouteImport } from './routes/_authenticated/app.roleta'
 import { Route as AuthenticatedAppTokenRouteImport } from './routes/_authenticated/app.token'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
@@ -61,6 +62,11 @@ const AuthenticatedAppHistoricoRoute =
     path: '/historico',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppOfertasRoute = AuthenticatedAppOfertasRouteImport.update({
+  id: '/ofertas',
+  path: '/ofertas',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppRoletaRoute = AuthenticatedAppRoletaRouteImport.update({
   id: '/roleta',
   path: '/roleta',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/ofertas': typeof AuthenticatedAppOfertasRoute
   '/app/roleta': typeof AuthenticatedAppRoletaRoute
   '/app/token': typeof AuthenticatedAppTokenRoute
   '/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/ofertas': typeof AuthenticatedAppOfertasRoute
   '/app/roleta': typeof AuthenticatedAppRoletaRoute
   '/app/token': typeof AuthenticatedAppTokenRoute
   '/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/_authenticated/app/ofertas': typeof AuthenticatedAppOfertasRoute
   '/_authenticated/app/roleta': typeof AuthenticatedAppRoletaRoute
   '/_authenticated/app/token': typeof AuthenticatedAppTokenRoute
   '/_authenticated/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/dashboard'
     | '/app/historico'
+    | '/app/ofertas'
     | '/app/roleta'
     | '/app/token'
     | '/dashboard/campanhas'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/app/historico'
+    | '/app/ofertas'
     | '/app/roleta'
     | '/app/token'
     | '/dashboard/campanhas'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/dashboard'
     | '/_authenticated/app/historico'
+    | '/_authenticated/app/ofertas'
     | '/_authenticated/app/roleta'
     | '/_authenticated/app/token'
     | '/_authenticated/dashboard/campanhas'
@@ -273,6 +285,13 @@ declare module '@tanstack/react-router' {
       path: '/historico'
       fullPath: '/app/historico'
       preLoaderRoute: typeof AuthenticatedAppHistoricoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/ofertas': {
+      id: '/_authenticated/app/ofertas'
+      path: '/ofertas'
+      fullPath: '/app/ofertas'
+      preLoaderRoute: typeof AuthenticatedAppOfertasRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/roleta': {
@@ -343,6 +362,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
+  AuthenticatedAppOfertasRoute: typeof AuthenticatedAppOfertasRoute
   AuthenticatedAppRoletaRoute: typeof AuthenticatedAppRoletaRoute
   AuthenticatedAppTokenRoute: typeof AuthenticatedAppTokenRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
@@ -350,6 +370,7 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
+  AuthenticatedAppOfertasRoute: AuthenticatedAppOfertasRoute,
   AuthenticatedAppRoletaRoute: AuthenticatedAppRoletaRoute,
   AuthenticatedAppTokenRoute: AuthenticatedAppTokenRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
