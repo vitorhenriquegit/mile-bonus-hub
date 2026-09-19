@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, RefreshCw, ShieldCheck, Copy, Loader2 } from "lucide-react";
+import { ArrowLeft, RefreshCw, ShieldCheck, Copy, Loader2, Flame, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { createFuelToken, getMyActiveToken, getMyOverview, getTiers } from "@/lib/loyalty.functions";
+import { createFuelToken, getMyActiveToken, getMyOverview, getTiers, getActiveCustomerCampaigns } from "@/lib/loyalty.functions";
 import { formatBRL, maskCpf, tierFor, type Tier } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/_authenticated/app/token")({
@@ -29,11 +29,13 @@ function TokenScreen() {
   const createTokenFn = useServerFn(createFuelToken);
   const overviewFn = useServerFn(getMyOverview);
   const tiersFn = useServerFn(getTiers);
+  const campaignsFn = useServerFn(getActiveCustomerCampaigns);
   const [now, setNow] = useState(() => Date.now());
 
   const tokenQuery = useQuery({ queryKey: ["active-token"], queryFn: () => activeTokenFn({}) });
   const overview = useQuery({ queryKey: ["my-overview"], queryFn: () => overviewFn({}) });
   const tiersQuery = useQuery({ queryKey: ["tiers"], queryFn: () => tiersFn({}) });
+  const campaignsQuery = useQuery({ queryKey: ["customer-campaigns"], queryFn: () => campaignsFn({}) });
 
   const createToken = useMutation({
     mutationFn: () => createTokenFn({}),
@@ -133,11 +135,42 @@ function TokenScreen() {
             <p className="font-mono text-sm font-semibold">{maskCpf(overview.data?.profile?.cpf)}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Desconto</p>
+            <p className="text-xs text-muted-foreground">Desconto do Nível</p>
             <p className="text-sm font-semibold text-primary">{formatBRL(current.discount_per_liter)}/L</p>
           </div>
         </div>
       </div>
+
+      {/* Alerta de Campanhas Promocionais Hoje */}
+      {campaignsQuery.data && campaignsQuery.data.some((c: any) => c.isTodayActive) && (
+        <div className="mt-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-card p-4 text-xs shadow-xs">
+          <div className="flex items-start gap-2.5">
+            <div className="grid h-7 w-7 place-items-center rounded-xl bg-amber-500 text-white shrink-0 mt-0.5 shadow-xs">
+              <Flame className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider text-[10px]">
+                🔥 Desconto Turbinado Hoje!
+              </span>
+              {campaignsQuery.data
+                .filter((c: any) => c.isTodayActive)
+                .slice(0, 1)
+                .map((camp: any) => (
+                  <div key={camp.id} className="mt-0.5">
+                    <p className="font-bold text-foreground text-xs">{camp.title}</p>
+                    <p className="text-muted-foreground text-[11px] mt-0.5">
+                      Abasteça a partir de <b>{formatBRL(camp.minFuelAmount)}</b> para somar{" "}
+                      <b className="text-emerald-600 dark:text-emerald-400">
+                        +{camp.discountType === "per_liter" ? formatBRL(camp.discountValue) + "/L" : camp.discountValue + "%"}
+                      </b>{" "}
+                      ao seu desconto de nível!
+                    </p>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <button
         onClick={() => createToken.mutate()}

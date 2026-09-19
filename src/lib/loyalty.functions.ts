@@ -393,9 +393,51 @@ export const registerFueling = createServerFn({ method: "POST" })
       sortedTiers.find((t) => volumeMonth >= Number(t.min_liters) && volumeMonth <= Number(t.max_liters)) ??
       sortedTiers[0];
 
-    const discountPerLiter = Number(currentTier?.discount_per_liter ?? 0);
-    const discountTotal = Math.round(data.liters * discountPerLiter * 100) / 100;
     const originalTotal = Math.round(data.liters * data.pricePerLiter * 100) / 100;
+    const todayDay = new Date().getDay();
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const fuelSlug = data.fuelType.toLowerCase().replace(/\s+/g, "_");
+
+    // Verificar se há campanha promocional ativa que se enquadra neste abastecimento
+    const eligibleCampaigns = currentCampaigns.filter((c) => {
+      if (c.status !== "active") return false;
+      if (c.startDate && todayISO < c.startDate) return false;
+      if (c.endDate && todayISO > c.endDate) return false;
+      if (!c.daysOfWeek.includes(todayDay)) return false;
+      if (c.minFuelAmount > 0 && originalTotal < c.minFuelAmount) return false;
+      if (c.fuelTypes && c.fuelTypes.length > 0) {
+        const matchesFuel = c.fuelTypes.some(
+          (f) => fuelSlug.includes(f) || f.includes(fuelSlug) || data.fuelType.toLowerCase().includes(f),
+        );
+        if (!matchesFuel) return false;
+      }
+      return true;
+    });
+
+    let promoDiscountPerLiter = 0;
+    let appliedCampaign: any = null;
+
+    if (eligibleCampaigns.length > 0) {
+      // Seleciona a campanha elegível com maior benefício
+      appliedCampaign = eligibleCampaigns[0];
+      if (appliedCampaign.discountType === "per_liter") {
+        promoDiscountPerLiter = Number(appliedCampaign.discountValue || 0);
+      } else {
+        promoDiscountPerLiter =
+          Math.round(((data.pricePerLiter * Number(appliedCampaign.discountValue || 0)) / 100) * 100) / 100;
+      }
+
+      // Atualiza métricas in-memory da campanha
+      if (appliedCampaign.metrics) {
+        appliedCampaign.metrics.fuelingsCount += 1;
+        appliedCampaign.metrics.totalLiters += data.liters;
+        appliedCampaign.metrics.totalDiscountBrl += Math.round(data.liters * promoDiscountPerLiter * 100) / 100;
+      }
+    }
+
+    const tierDiscountPerLiter = Number(currentTier?.discount_per_liter ?? 0);
+    const discountPerLiter = tierDiscountPerLiter + promoDiscountPerLiter;
+    const discountTotal = Math.round(data.liters * discountPerLiter * 100) / 100;
     const finalTotal = Math.max(0, Math.round((originalTotal - discountTotal) * 100) / 100);
 
     // Insert fueling record
@@ -426,10 +468,20 @@ export const registerFueling = createServerFn({ method: "POST" })
     return {
       ok: true,
       fuelingId: insertedFueling.id,
+      tierDiscountPerLiter,
+      promoDiscountPerLiter,
       discountPerLiter,
       discountTotal,
       originalTotal,
       finalTotal,
+      appliedCampaign: appliedCampaign
+        ? {
+            id: appliedCampaign.id,
+            title: appliedCampaign.title,
+            discountValue: appliedCampaign.discountValue,
+            discountType: appliedCampaign.discountType,
+          }
+        : null,
     };
   });
 
