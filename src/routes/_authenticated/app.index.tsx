@@ -2,8 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Fuel, Zap, TrendingUp, Loader2, Sparkles, Gift, Flame, ArrowRight } from "lucide-react";
-import { getMyOverview, getTiers, getActiveCustomerCampaigns } from "@/lib/loyalty.functions";
-import { formatBRL, tierFor, type Tier } from "@/lib/loyalty";
+import { getMyOverview, getTiers, getActiveCustomerCampaigns, getActiveCustomerBanners } from "@/lib/loyalty.functions";
+import { formatBRL, tierFor, type Tier, type PromotionalBanner } from "@/lib/loyalty";
+import { HomeBannerSlider } from "@/components/HomeBannerSlider";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   ssr: false,
@@ -25,10 +26,12 @@ function HomeScreen() {
   const overviewFn = useServerFn(getMyOverview);
   const tiersFn = useServerFn(getTiers);
   const campaignsFn = useServerFn(getActiveCustomerCampaigns);
+  const bannersFn = useServerFn(getActiveCustomerBanners);
 
   const overview = useQuery({ queryKey: ["my-overview"], queryFn: () => overviewFn({}) });
   const tiersQuery = useQuery({ queryKey: ["tiers"], queryFn: () => tiersFn({}) });
   const campaignsQuery = useQuery({ queryKey: ["customer-campaigns"], queryFn: () => campaignsFn({}) });
+  const bannersQuery = useQuery({ queryKey: ["customer-banners"], queryFn: () => bannersFn({}) });
 
   if (overview.isLoading || tiersQuery.isLoading) {
     return (
@@ -109,6 +112,13 @@ function HomeScreen() {
           </p>
         )}
       </div>
+
+      {/* Banners Promocionais & Destaques do Posto */}
+      {bannersQuery.data && bannersQuery.data.length > 0 && (
+        <div className="space-y-1.5">
+          <HomeBannerSlider banners={bannersQuery.data} />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <StatCard label="Volume no mês" value={`${volume.toFixed(0)}L`} icon={<Fuel className="h-4 w-4" />} />

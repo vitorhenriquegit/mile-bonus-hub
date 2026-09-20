@@ -501,4 +501,105 @@ export const DEFAULT_FRAUD_INCIDENTS: FraudIncident[] = [
   },
 ];
 
+export type PromotionalBanner = {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  badgeColor: "amber" | "emerald" | "blue" | "purple" | "rose";
+  theme: "amber" | "emerald" | "blue" | "purple" | "rose" | "dark";
+  icon: "coffee" | "wrench" | "droplets" | "sparkles" | "fuel" | "gift" | "tag";
+  actionLabel: string;
+  actionType: "token" | "roleta" | "ofertas" | "external" | "modal";
+  actionUrl?: string;
+  modalDetails?: {
+    description: string;
+    rules: string[];
+    validUntil?: string;
+  };
+  active: boolean;
+  sortOrder: number;
+};
+
+export const DEFAULT_BANNERS: PromotionalBanner[] = [
+  {
+    id: "banner-1",
+    title: "Combo Café + Pão de Queijo na Estufa",
+    subtitle: "Aqueça sua parada na conveniência por apenas R$ 9,90",
+    badge: "CONVENIÊNCIA 24H",
+    badgeColor: "amber",
+    theme: "amber",
+    icon: "coffee",
+    actionLabel: "Ver no Posto",
+    actionType: "modal",
+    modalDetails: {
+      description: "Aproveite o melhor café expresso moído na hora acompanhado de um pão de queijo quentinho da nossa estufa.",
+      rules: [
+        "Válido 24h na loja de conveniência do posto",
+        "Apresente seu app ao atendente do caixa",
+        "Limite de 2 combos por cliente/dia",
+      ],
+      validUntil: "Válido até 31/12/2026",
+    },
+    active: true,
+    sortOrder: 1,
+  },
+  {
+    id: "banner-2",
+    title: "Troca de Óleo Lubrax com 20% OFF",
+    subtitle: "Check-up grátis de 15 itens essenciais para sua segurança",
+    badge: "PIT STOP & SERVIÇOS",
+    badgeColor: "emerald",
+    theme: "emerald",
+    icon: "wrench",
+    actionLabel: "Agendar ou Ir",
+    actionType: "modal",
+    modalDetails: {
+      description: "Troque o óleo do seu veículo com lubrificantes premium Lubrax sintético ou semissintético e ganhe a revisão preventiva de 15 itens essenciais.",
+      rules: [
+        "Desconto de 20% no óleo + mão de obra gratuita",
+        "Check-up inclui freios, filtros, lâmpadas, palhetas e fluídos",
+        "Atendimento por ordem de chegada no box de serviços",
+      ],
+      validUntil: "Válido todos os dias das 08h às 18h",
+    },
+    active: true,
+    sortOrder: 2,
+  },
+  {
+    id: "banner-3",
+    title: "Ducha Ecológica com Cera Grátis",
+    subtitle: "Abasteça 35L ou mais de Aditivada e saia de carro brilhando",
+    badge: "DUCHA GRÁTIS",
+    badgeColor: "blue",
+    theme: "blue",
+    icon: "droplets",
+    actionLabel: "Abastecer Agora",
+    actionType: "token",
+    modalDetails: {
+      description: "Lavagem expressa com shampoo biodegradável e aplicação de cera protetora gratuita para clientes fidelidade.",
+      rules: [
+        "Válido ao abastecer a partir de 35 litros de combustível aditivado",
+        "Cupom emitido automaticamente após a validação do token na pista",
+      ],
+      validUntil: "Disponível na pista principal",
+    },
+    active: true,
+    sortOrder: 3,
+  },
+  {
+    id: "banner-4",
+    title: "Roleta da Sorte: Giros Diários",
+    subtitle: "Gire todos os dias e ganhe até R$ 0,20 extra de desconto por litro",
+    badge: "PRÊMIO GARANTIDO",
+    badgeColor: "purple",
+    theme: "purple",
+    icon: "sparkles",
+    actionLabel: "Girar Agora",
+    actionType: "roleta",
+    active: true,
+    sortOrder: 4,
+  },
+];
+
 

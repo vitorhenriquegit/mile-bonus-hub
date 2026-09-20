@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LayoutDashboard, SlidersHorizontal, Brain, Fuel, Radio, LogOut, MapPin, Sparkles, Megaphone, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, SlidersHorizontal, Brain, Fuel, Radio, LogOut, MapPin, Sparkles, Megaphone, ShieldAlert, Layers } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getStations } from "@/lib/loyalty.functions";
 import { useState } from "react";
@@ -32,9 +32,10 @@ function DashboardShell() {
   const items = [
     { to: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
     { to: "/dashboard/monitor", label: "Monitor de Pista", icon: Radio },
-    { to: "/dashboard/seguranca", label: "Segurança & Fraude", icon: ShieldAlert },
+    { to: "/dashboard/banners", label: "Banners do App", icon: Layers },
     { to: "/dashboard/campanhas", label: "Campanhas Promocionais", icon: Megaphone },
     { to: "/dashboard/roleta", label: "Roleta da Sorte", icon: Sparkles },
+    { to: "/dashboard/seguranca", label: "Segurança & Fraude", icon: ShieldAlert },
     { to: "/dashboard/regras", label: "Tiers e Regras", icon: SlidersHorizontal },
     { to: "/dashboard/clientes", label: "Inteligência de Clientes", icon: Brain },
   ] as const;

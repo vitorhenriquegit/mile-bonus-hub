@@ -16,10 +16,12 @@ import {
   DEFAULT_SECURITY_RULES,
   DEFAULT_ATTENDANTS,
   DEFAULT_FRAUD_INCIDENTS,
+  DEFAULT_BANNERS,
   type Campaign,
   type FraudIncident,
   type AttendantSecurityProfile,
   type SecurityRuleSetting,
+  type PromotionalBanner,
 } from "./loyalty";
 
 const DEFAULT_TIERS = [
@@ -736,6 +738,37 @@ export const updateSecurityRuleSettings = createServerFn({ method: "POST" })
     }
 
     return { ok: true, rule };
+  });
+
+// ==========================================
+// BANNERS PROMOCIONAIS DO POSTO
+// ==========================================
+let currentBanners: PromotionalBanner[] = [...DEFAULT_BANNERS];
+
+export const getActiveCustomerBanners = createServerFn({ method: "GET" }).handler(async () => {
+  return currentBanners
+    .filter((b) => b.active)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+});
+
+export const getAllBanners = createServerFn({ method: "GET" }).handler(async () => {
+  return currentBanners.sort((a, b) => a.sortOrder - b.sortOrder);
+});
+
+export const saveBanners = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: PromotionalBanner[] }) => {
+    if (Array.isArray(data)) {
+      currentBanners = [...data];
+    }
+    return { ok: true, banners: currentBanners };
+  });
+
+export const toggleBannerStatus = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: { id: string; active: boolean } }) => {
+    const banner = currentBanners.find((b) => b.id === data.id);
+    if (!banner) throw new Error("Banner não encontrado");
+    banner.active = data.active;
+    return { ok: true, banner };
   });
 
 

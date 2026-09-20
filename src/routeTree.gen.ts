@@ -20,6 +20,7 @@ import { Route as AuthenticatedAppOfertasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppRoletaRouteImport } from './routes/_authenticated/app.roleta'
 import { Route as AuthenticatedAppTokenRouteImport } from './routes/_authenticated/app.token'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedDashboardBannersRouteImport } from './routes/_authenticated/dashboard.banners'
 import { Route as AuthenticatedDashboardCampanhasRouteImport } from './routes/_authenticated/dashboard.campanhas'
 import { Route as AuthenticatedDashboardClientesRouteImport } from './routes/_authenticated/dashboard.clientes'
 import { Route as AuthenticatedDashboardMonitorRouteImport } from './routes/_authenticated/dashboard.monitor'
@@ -83,6 +84,12 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardBannersRoute =
+  AuthenticatedDashboardBannersRouteImport.update({
+    id: '/banners',
+    path: '/banners',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardCampanhasRoute =
   AuthenticatedDashboardCampanhasRouteImport.update({
     id: '/campanhas',
@@ -129,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/app/ofertas': typeof AuthenticatedAppOfertasRoute
   '/app/roleta': typeof AuthenticatedAppRoletaRoute
   '/app/token': typeof AuthenticatedAppTokenRoute
+  '/dashboard/banners': typeof AuthenticatedDashboardBannersRoute
   '/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
   '/dashboard/clientes': typeof AuthenticatedDashboardClientesRoute
   '/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
@@ -145,6 +153,7 @@ export interface FileRoutesByTo {
   '/app/ofertas': typeof AuthenticatedAppOfertasRoute
   '/app/roleta': typeof AuthenticatedAppRoletaRoute
   '/app/token': typeof AuthenticatedAppTokenRoute
+  '/dashboard/banners': typeof AuthenticatedDashboardBannersRoute
   '/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
   '/dashboard/clientes': typeof AuthenticatedDashboardClientesRoute
   '/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
@@ -165,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/app/ofertas': typeof AuthenticatedAppOfertasRoute
   '/_authenticated/app/roleta': typeof AuthenticatedAppRoletaRoute
   '/_authenticated/app/token': typeof AuthenticatedAppTokenRoute
+  '/_authenticated/dashboard/banners': typeof AuthenticatedDashboardBannersRoute
   '/_authenticated/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
   '/_authenticated/dashboard/clientes': typeof AuthenticatedDashboardClientesRoute
   '/_authenticated/dashboard/monitor': typeof AuthenticatedDashboardMonitorRoute
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/app/ofertas'
     | '/app/roleta'
     | '/app/token'
+    | '/dashboard/banners'
     | '/dashboard/campanhas'
     | '/dashboard/clientes'
     | '/dashboard/monitor'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/app/ofertas'
     | '/app/roleta'
     | '/app/token'
+    | '/dashboard/banners'
     | '/dashboard/campanhas'
     | '/dashboard/clientes'
     | '/dashboard/monitor'
@@ -220,6 +232,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/ofertas'
     | '/_authenticated/app/roleta'
     | '/_authenticated/app/token'
+    | '/_authenticated/dashboard/banners'
     | '/_authenticated/dashboard/campanhas'
     | '/_authenticated/dashboard/clientes'
     | '/_authenticated/dashboard/monitor'
@@ -315,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/banners': {
+      id: '/_authenticated/dashboard/banners'
+      path: '/banners'
+      fullPath: '/dashboard/banners'
+      preLoaderRoute: typeof AuthenticatedDashboardBannersRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/campanhas': {
       id: '/_authenticated/dashboard/campanhas'
       path: '/campanhas'
@@ -380,6 +400,7 @@ const AuthenticatedAppRouteWithChildren =
   AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
 
 interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardBannersRoute: typeof AuthenticatedDashboardBannersRoute
   AuthenticatedDashboardCampanhasRoute: typeof AuthenticatedDashboardCampanhasRoute
   AuthenticatedDashboardClientesRoute: typeof AuthenticatedDashboardClientesRoute
   AuthenticatedDashboardMonitorRoute: typeof AuthenticatedDashboardMonitorRoute
@@ -391,6 +412,7 @@ interface AuthenticatedDashboardRouteChildren {
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
+    AuthenticatedDashboardBannersRoute: AuthenticatedDashboardBannersRoute,
     AuthenticatedDashboardCampanhasRoute: AuthenticatedDashboardCampanhasRoute,
     AuthenticatedDashboardClientesRoute: AuthenticatedDashboardClientesRoute,
     AuthenticatedDashboardMonitorRoute: AuthenticatedDashboardMonitorRoute,
