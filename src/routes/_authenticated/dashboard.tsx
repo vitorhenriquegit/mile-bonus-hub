@@ -13,6 +13,7 @@ import {
   Megaphone,
   ShieldAlert,
   Layers,
+  LayoutTemplate,
   Menu,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,6 +81,7 @@ function NavigationContent({
     {
       title: "Marketing",
       items: [
+        { to: "/dashboard/home", label: "Layout da Home", icon: LayoutTemplate, badge: "Novo" },
         { to: "/dashboard/campanhas", label: "Campanhas Promocionais", icon: Megaphone },
         { to: "/dashboard/banners", label: "Banners do App", icon: Layers },
         { to: "/dashboard/roleta", label: "Roleta da Sorte", icon: Sparkles },

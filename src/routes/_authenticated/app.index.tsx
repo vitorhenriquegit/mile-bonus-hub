@@ -2,11 +2,25 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Fuel, Zap, TrendingUp, Loader2, Sparkles, Gift, Flame, ArrowRight } from "lucide-react";
-import { getMyOverview, getTiers, getActiveCustomerCampaigns, getActiveCustomerBanners } from "@/lib/loyalty.functions";
-import { formatBRL, tierFor, type Tier, type PromotionalBanner } from "@/lib/loyalty";
+import {
+  getMyOverview,
+  getTiers,
+  getActiveCustomerCampaigns,
+  getActiveCustomerBanners,
+  getActiveCustomerHomeLayout,
+} from "@/lib/loyalty.functions";
+import { formatBRL, tierFor, type Tier } from "@/lib/loyalty";
 import { HomeBannerSlider } from "@/components/HomeBannerSlider";
 import { useNiche } from "@/lib/niche-context";
 import { NicheIcon } from "@/components/NicheIcon";
+import { useState } from "react";
+import { HomeQuickActions } from "@/components/HomeQuickActions";
+import { EnhancedBannerRenderer } from "@/components/EnhancedBannerRenderer";
+import { HomeVideoPlayer } from "@/components/HomeVideoPlayer";
+import { HomeInstagramCard } from "@/components/HomeInstagramCard";
+import { HomePopupBanner } from "@/components/HomePopupBanner";
+import { HomeFullscreenBanner } from "@/components/HomeFullscreenBanner";
+import { type HomeBlockType } from "@/lib/home-layout";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   ssr: false,
@@ -26,15 +40,21 @@ export const Route = createFileRoute("/_authenticated/app/")({
 function HomeScreen() {
   const { currentNiche } = useNiche();
   const navigate = useNavigate();
+
   const overviewFn = useServerFn(getMyOverview);
   const tiersFn = useServerFn(getTiers);
   const campaignsFn = useServerFn(getActiveCustomerCampaigns);
   const bannersFn = useServerFn(getActiveCustomerBanners);
+  const homeLayoutFn = useServerFn(getActiveCustomerHomeLayout);
 
   const overview = useQuery({ queryKey: ["my-overview"], queryFn: () => overviewFn({}) });
   const tiersQuery = useQuery({ queryKey: ["tiers"], queryFn: () => tiersFn({}) });
   const campaignsQuery = useQuery({ queryKey: ["customer-campaigns"], queryFn: () => campaignsFn({}) });
   const bannersQuery = useQuery({ queryKey: ["customer-banners"], queryFn: () => bannersFn({}) });
+  const homeLayoutQuery = useQuery({ queryKey: ["customer-home-layout"], queryFn: () => homeLayoutFn({}) });
+
+  const [dismissedFullscreen, setDismissedFullscreen] = useState(false);
+  const [dismissedPopup, setDismissedPopup] = useState(false);
 
   if (overview.isLoading || tiersQuery.isLoading) {
     return (
@@ -55,11 +75,241 @@ function HomeScreen() {
   const span = Math.max(1, nextMinLiters - currentMinLiters);
   const progress = Math.min(100, Math.max(0, Math.round(((volume - currentMinLiters) / span) * 100)));
 
+  const layout = homeLayoutQuery.data;
+  const activeBanners = layout?.banners ?? [];
+  const fullscreenBanner = !dismissedFullscreen
+    ? activeBanners.find((b) => b.format === "fullscreen" && b.active)
+    : null;
+  const popupBanner = !dismissedPopup
+    ? activeBanners.find((b) => b.format === "popup" && b.active)
+    : null;
+
+  // Lista ordenada de blocos dinâmicos configurados no Marketing
+  const blocks = (layout?.blocks && layout.blocks.length > 0
+    ? layout.blocks
+    : [
+        { id: "b1", type: "level_card" as HomeBlockType, title: "Card de Nível & Fidelidade", enabled: true, sortOrder: 1 },
+        { id: "b2", type: "quick_actions" as HomeBlockType, title: "Acessos Rápidos", enabled: true, sortOrder: 2 },
+        { id: "b3", type: "banners" as HomeBlockType, title: "Banners Promocionais & Formatos", enabled: true, sortOrder: 3 },
+        { id: "b4", type: "stats_metrics" as HomeBlockType, title: "Métricas & Economia", enabled: true, sortOrder: 4 },
+        { id: "b5", type: "active_campaigns" as HomeBlockType, title: "Campanhas Vigentes", enabled: true, sortOrder: 5 },
+        { id: "b6", type: "video" as HomeBlockType, title: "Vídeo em Destaque", enabled: true, sortOrder: 6 },
+        { id: "b7", type: "instagram" as HomeBlockType, title: "Post / Reels do Instagram", enabled: true, sortOrder: 7 },
+        { id: "b8", type: "gamification_tiers" as HomeBlockType, title: "Tabela de Níveis", enabled: true, sortOrder: 8 },
+      ]
+  ).filter((b) => b.enabled).sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const renderBlock = (blockType: HomeBlockType, blockId: string) => {
+    switch (blockType) {
+      case "level_card":
+        return (
+          <div
+            key={blockId}
+            className="relative overflow-hidden rounded-3xl p-5 text-white shadow-float transition-all"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider opacity-90">Seu nível</p>
+                <p className="mt-1 text-2xl font-bold">Nível {current.name}</p>
+              </div>
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/20 backdrop-blur" aria-hidden>
+                <Zap className="h-6 w-6" />
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-white/15 p-4 backdrop-blur">
+              <p className="text-xs opacity-90">{currentNiche.terms.rewardTypeLabel}</p>
+              <p className="mt-1 text-3xl font-black tracking-tight">
+                {formatBRL(current.discount_per_liter)}
+                <span className="ml-1 text-base font-semibold opacity-90">/{currentNiche.terms.metricShort}</span>
+              </p>
+            </div>
+
+            {!isMax ? (
+              <div className="mt-5">
+                <div className="mb-2 flex items-center justify-between text-xs font-medium">
+                  <span>
+                    Faltam <b>{litersToNext.toFixed(0)} {currentNiche.terms.metricShort}</b> para {next.name}
+                  </span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/25">
+                  <div className="h-full rounded-full bg-white" style={{ width: `${progress}%` }} />
+                </div>
+                <p className="mt-2 text-xs opacity-90">
+                  No próximo nível você ganha <b>{formatBRL(next.discount_per_liter)}/{currentNiche.terms.metricShort}</b>
+                </p>
+              </div>
+            ) : (
+              <p className="mt-5 text-xs font-medium opacity-90">
+                Você está no nível máximo. Continue aproveitando suas vantagens!
+              </p>
+            )}
+          </div>
+        );
+
+      case "quick_actions":
+        if (layout?.quickActions && layout.quickActions.length > 0) {
+          return (
+            <div key={blockId} className="space-y-1.5">
+              <HomeQuickActions items={layout.quickActions} />
+            </div>
+          );
+        }
+        return null;
+
+      case "banners": {
+        const hasEnhanced = activeBanners.some((b) =>
+          ["horizontal", "vertical", "carousel"].includes(b.format)
+        );
+        return (
+          <div key={blockId} className="space-y-2">
+            {hasEnhanced ? (
+              <EnhancedBannerRenderer banners={activeBanners} />
+            ) : bannersQuery.data && bannersQuery.data.length > 0 ? (
+              <HomeBannerSlider banners={bannersQuery.data} />
+            ) : null}
+          </div>
+        );
+      }
+
+      case "stats_metrics":
+        return (
+          <div key={blockId} className="grid grid-cols-2 gap-3">
+            <StatCard
+              label={`${currentNiche.terms.metricLabel} no mês`}
+              value={`${volume.toFixed(0)} ${currentNiche.terms.metricShort}`}
+              icon={<NicheIcon name={currentNiche.iconName} className="h-4 w-4" />}
+            />
+            <StatCard label="Economizado" value={formatBRL(saved)} icon={<TrendingUp className="h-4 w-4" />} accent />
+          </div>
+        );
+
+      case "active_campaigns":
+        if (!campaignsQuery.data || campaignsQuery.data.length === 0) return null;
+        return (
+          <div key={blockId} className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Flame className="h-4 w-4 text-emerald-500" />
+                <h2 className="text-sm font-bold text-foreground">Campanhas & Descontos</h2>
+              </div>
+              <Link to="/app/ofertas" className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
+                Ver todas <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="space-y-2.5">
+              {campaignsQuery.data.slice(0, 2).map((camp: any) => {
+                const isToday = camp.isTodayActive;
+                const discountText =
+                  camp.discountType === "per_liter"
+                    ? `+${formatBRL(camp.discountValue)}/L`
+                    : `${camp.discountValue}% OFF`;
+
+                return (
+                  <div
+                    key={camp.id}
+                    className={`relative overflow-hidden rounded-2xl border p-4 shadow-card transition ${
+                      isToday
+                        ? "border-emerald-500/40 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-card"
+                        : "border-border bg-card"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      {isToday ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Válido Hoje!
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-muted-foreground">
+                          Dias Selecionados
+                        </span>
+                      )}
+                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-black text-primary">
+                        {discountText}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-1.5 text-sm font-bold text-foreground leading-snug">{camp.title}</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{camp.description}</p>
+
+                    <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
+                      <span className="text-xs text-muted-foreground">
+                        Mínimo: <strong className="text-foreground">{camp.minFuelAmount > 0 ? formatBRL(camp.minFuelAmount) : "Livre"}</strong>
+                      </span>
+
+                      <button
+                        onClick={() => navigate({ to: "/app/ofertas" })}
+                        className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-xs transition hover:bg-primary/90"
+                      >
+                        <Zap className="h-3 w-3" />
+                        {camp.minFuelAmount > 0 ? `Aproveitar a partir de ${formatBRL(camp.minFuelAmount)}` : "Aproveitar"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+
+      case "video":
+        if (!layout?.video || !layout.video.enabled) return null;
+        return (
+          <div key={blockId}>
+            <HomeVideoPlayer video={layout.video} />
+          </div>
+        );
+
+      case "instagram":
+        if (!layout?.instagram || !layout.instagram.enabled) return null;
+        return (
+          <div key={blockId}>
+            <HomeInstagramCard instagram={layout.instagram} />
+          </div>
+        );
+
+      case "gamification_tiers":
+        return (
+          <div key={blockId} className="rounded-2xl border border-border bg-card p-4">
+            <p className="text-sm font-semibold">Níveis do programa ({currentNiche.badge})</p>
+            <ul className="mt-3 space-y-2">
+              {tiers.map((t) => {
+                const isCurrent = t.name === current.name;
+                return (
+                  <li
+                    key={t.id}
+                    className={`flex items-center justify-between rounded-xl px-3 py-2 text-sm ${isCurrent ? "bg-accent" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: `var(--${t.color})` }} />
+                      <span className="font-medium">{t.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t.min_liters}–{t.max_liters >= 9999 ? "∞" : t.max_liters} {currentNiche.terms.metricShort}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-primary">{formatBRL(t.discount_per_liter)}/{currentNiche.terms.metricShort}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-5 px-5 pt-6">
+    <div className="flex flex-col gap-5 px-5 pt-6 pb-10">
+      {/* Top Bar with user welcome and notifications */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <NicheIcon name={currentNiche.iconName} className="h-5 w-5" />
           </div>
           <div className="min-w-0">
@@ -67,143 +317,18 @@ function HomeScreen() {
             <p className="truncate text-sm font-semibold">{firstName}</p>
           </div>
         </div>
-        <button className="grid h-10 w-10 place-items-center rounded-xl border border-border text-muted-foreground">
+        <button className="grid h-10 w-10 place-items-center rounded-xl border border-border text-muted-foreground hover:text-foreground transition">
           <Bell className="h-5 w-5" />
         </button>
       </div>
 
-      <div
-        className="relative overflow-hidden rounded-3xl p-5 text-white shadow-float"
-        style={{ background: "var(--gradient-primary)" }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider opacity-90">Seu nível</p>
-            <p className="mt-1 text-2xl font-bold">Nível {current.name}</p>
-          </div>
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/20 backdrop-blur" aria-hidden>
-            <Zap className="h-6 w-6" />
-          </div>
-        </div>
+      {/* Dynamic Blocks Rendering ordered by SortOrder */}
+      {blocks.map((block) => renderBlock(block.type, block.id))}
 
-        <div className="mt-5 rounded-2xl bg-white/15 p-4 backdrop-blur">
-          <p className="text-xs opacity-90">{currentNiche.terms.rewardTypeLabel}</p>
-          <p className="mt-1 text-3xl font-black tracking-tight">
-            {formatBRL(current.discount_per_liter)}
-            <span className="ml-1 text-base font-semibold opacity-90">/{currentNiche.terms.metricShort}</span>
-          </p>
-        </div>
-
-        {!isMax ? (
-          <div className="mt-5">
-            <div className="mb-2 flex items-center justify-between text-xs font-medium">
-              <span>
-                Faltam <b>{litersToNext.toFixed(0)} {currentNiche.terms.metricShort}</b> para {next.name}
-              </span>
-              <span>{progress}%</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/25">
-              <div className="h-full rounded-full bg-white" style={{ width: `${progress}%` }} />
-            </div>
-            <p className="mt-2 text-xs opacity-90">
-              No próximo nível você ganha <b>{formatBRL(next.discount_per_liter)}/{currentNiche.terms.metricShort}</b>
-            </p>
-          </div>
-        ) : (
-          <p className="mt-5 text-xs font-medium opacity-90">
-            Você está no nível máximo. Continue aproveitando suas vantagens!
-          </p>
-        )}
-      </div>
-
-      {/* Banners Promocionais & Destaques */}
-      {bannersQuery.data && bannersQuery.data.length > 0 && (
-        <div className="space-y-1.5">
-          <HomeBannerSlider banners={bannersQuery.data} />
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label={`${currentNiche.terms.metricLabel} no mês`}
-          value={`${volume.toFixed(0)} ${currentNiche.terms.metricShort}`}
-          icon={<NicheIcon name={currentNiche.iconName} className="h-4 w-4" />}
-        />
-        <StatCard label="Economizado" value={formatBRL(saved)} icon={<TrendingUp className="h-4 w-4" />} accent />
-      </div>
-
-      {/* Campanhas Promocionais Vigentes */}
-      {campaignsQuery.data && campaignsQuery.data.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <Flame className="h-4 w-4 text-emerald-500" />
-              <h2 className="text-sm font-bold text-foreground">Campanhas & Descontos</h2>
-            </div>
-            <Link to="/app/ofertas" className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
-              Ver todas <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-
-          <div className="space-y-2.5">
-            {campaignsQuery.data.slice(0, 2).map((camp: any) => {
-              const isToday = camp.isTodayActive;
-              const discountText =
-                camp.discountType === "per_liter"
-                  ? `+${formatBRL(camp.discountValue)}/L`
-                  : `${camp.discountValue}% OFF`;
-
-              return (
-                <div
-                  key={camp.id}
-                  className={`relative overflow-hidden rounded-2xl border p-4 shadow-card transition ${
-                    isToday
-                      ? "border-emerald-500/40 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-card"
-                      : "border-border bg-card"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    {isToday ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Válido Hoje!
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-semibold text-muted-foreground">
-                        Dias Selecionados
-                      </span>
-                    )}
-                    <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-black text-primary">
-                      {discountText}
-                    </span>
-                  </div>
-
-                  <h3 className="mt-1.5 text-sm font-bold text-foreground leading-snug">{camp.title}</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{camp.description}</p>
-
-                  <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
-                    <span className="text-xs text-muted-foreground">
-                      Mínimo: <strong className="text-foreground">{camp.minFuelAmount > 0 ? formatBRL(camp.minFuelAmount) : "Livre"}</strong>
-                    </span>
-
-                    <button
-                      onClick={() => navigate({ to: "/app/ofertas" })}
-                      className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-xs transition hover:bg-primary/90"
-                    >
-                      <Zap className="h-3 w-3" />
-                      {camp.minFuelAmount > 0 ? `Aproveitar a partir de ${formatBRL(camp.minFuelAmount)}` : "Aproveitar"}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
+      {/* Quick Token Action */}
       <Link
         to="/app/token"
-        className="rounded-2xl bg-primary px-5 py-4 text-center text-sm font-semibold text-primary-foreground shadow-float"
+        className="rounded-2xl bg-primary px-5 py-4 text-center text-sm font-semibold text-primary-foreground shadow-float transition hover:opacity-95"
       >
         Gerar token ({currentNiche.terms.actionVerb})
       </Link>
@@ -227,29 +352,21 @@ function HomeScreen() {
         <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Girar →</span>
       </Link>
 
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-sm font-semibold">Níveis do programa ({currentNiche.badge})</p>
-        <ul className="mt-3 space-y-2">
-          {tiers.map((t) => {
-            const isCurrent = t.name === current.name;
-            return (
-              <li
-                key={t.id}
-                className={`flex items-center justify-between rounded-xl px-3 py-2 text-sm ${isCurrent ? "bg-accent" : ""}`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: `var(--${t.color})` }} />
-                  <span className="font-medium">{t.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {t.min_liters}–{t.max_liters >= 9999 ? "∞" : t.max_liters} {currentNiche.terms.metricShort}
-                  </span>
-                </div>
-                <span className="font-semibold text-primary">{formatBRL(t.discount_per_liter)}/{currentNiche.terms.metricShort}</span>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      {/* Fullscreen Splash Banner Modal */}
+      {fullscreenBanner && (
+        <HomeFullscreenBanner
+          banner={fullscreenBanner}
+          onClose={() => setDismissedFullscreen(true)}
+        />
+      )}
+
+      {/* Pop-up Promotional Dialog */}
+      {popupBanner && (
+        <HomePopupBanner
+          banner={popupBanner}
+          onClose={() => setDismissedPopup(true)}
+        />
+      )}
     </div>
   );
 }

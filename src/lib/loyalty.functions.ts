@@ -23,6 +23,11 @@ import {
   type SecurityRuleSetting,
   type PromotionalBanner,
 } from "./loyalty";
+import {
+  DEFAULT_HOME_LAYOUT_SETTINGS,
+  type HomeLayoutSettings,
+  isAudienceMatch,
+} from "./home-layout";
 
 const DEFAULT_TIERS = [
   { id: "1", name: "Bronze", min_liters: 0, max_liters: 50, discount_per_liter: 0.05, color: "tier-bronze", sort_order: 1 },
@@ -806,6 +811,61 @@ export const toggleBannerStatus = createServerFn({ method: "POST" })
     banner.active = data.active;
     return { ok: true, banner };
   });
+
+// ==========================================
+// LAYOUT DA HOME DO APP & MARKETING
+// ==========================================
+let currentHomeLayout: HomeLayoutSettings = {
+  ...DEFAULT_HOME_LAYOUT_SETTINGS,
+  blocks: DEFAULT_HOME_LAYOUT_SETTINGS.blocks.map((b) => ({ ...b })),
+  banners: DEFAULT_HOME_LAYOUT_SETTINGS.banners.map((b) => ({ ...b })),
+  quickActions: DEFAULT_HOME_LAYOUT_SETTINGS.quickActions.map((q) => ({ ...q })),
+  video: { ...DEFAULT_HOME_LAYOUT_SETTINGS.video },
+  instagram: { ...DEFAULT_HOME_LAYOUT_SETTINGS.instagram },
+};
+
+export const getHomeLayoutSettings = createServerFn({ method: "GET" }).handler(async () => {
+  return currentHomeLayout;
+});
+
+export const saveHomeLayoutSettings = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: HomeLayoutSettings }) => {
+    if (data && typeof data === "object") {
+      currentHomeLayout = {
+        blocks: Array.isArray(data.blocks) ? data.blocks : currentHomeLayout.blocks,
+        banners: Array.isArray(data.banners) ? data.banners : currentHomeLayout.banners,
+        quickActions: Array.isArray(data.quickActions) ? data.quickActions : currentHomeLayout.quickActions,
+        video: data.video ? { ...data.video } : currentHomeLayout.video,
+        instagram: data.instagram ? { ...data.instagram } : currentHomeLayout.instagram,
+      };
+    }
+    return { ok: true, layout: currentHomeLayout };
+  });
+
+export const getActiveCustomerHomeLayout = createServerFn({ method: "GET" })
+  .handler(async () => {
+    // Retorna a home com ordenação adequada
+    const sortedBlocks = [...currentHomeLayout.blocks]
+      .filter((b) => b.enabled)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const sortedQuickActions = [...currentHomeLayout.quickActions]
+      .filter((q) => q.enabled)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const activeBanners = [...currentHomeLayout.banners]
+      .filter((b) => b.active)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    return {
+      blocks: sortedBlocks,
+      quickActions: sortedQuickActions,
+      banners: activeBanners,
+      video: currentHomeLayout.video.enabled ? currentHomeLayout.video : null,
+      instagram: currentHomeLayout.instagram.enabled ? currentHomeLayout.instagram : null,
+    };
+  });
+
 
 
 
