@@ -283,7 +283,7 @@ export function SpinWheel({
   return (
     <div className="relative inline-flex flex-col items-center justify-center p-3">
       {/* Background Glow Effect */}
-      <div className="absolute inset-0 m-auto h-[90%] w-[90%] rounded-full bg-amber-500/20 blur-2xl -z-10 pointer-events-none" />
+      <div className="absolute inset-0 m-auto h-[90%] w-[90%] rounded-full bg-emerald-500/25 blur-2xl -z-10 pointer-events-none" />
 
       {/* Realistic 3D Pointer Arrow at the Top */}
       <div

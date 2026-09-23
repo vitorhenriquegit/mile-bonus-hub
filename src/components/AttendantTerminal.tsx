@@ -317,14 +317,14 @@ export function AttendantTerminal({
 
           {/* Alerta de Promoção Aplicada ou Oportunidade de Upsell */}
           {matchedCampaign && (
-            <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-card p-4 shadow-sm">
+            <div className="rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-card p-4 shadow-sm">
               <div className="flex items-start gap-2.5">
-                <div className="grid h-8 w-8 place-items-center rounded-xl bg-amber-500 text-white shrink-0 mt-0.5 shadow-xs">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground shrink-0 mt-0.5 shadow-xs">
                   <Flame className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-md">
                       🎉 Promoção Sazonal Aplicada!
                     </span>
                     <strong className="text-xs font-bold text-foreground">{matchedCampaign.title}</strong>
@@ -370,7 +370,7 @@ export function AttendantTerminal({
 
               {/* Detalhe da Promoção se houver */}
               {promoDiscountPerLiter > 0 && (
-                <div className="flex justify-between text-xs font-bold text-amber-600 dark:text-amber-400">
+                <div className="flex justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   <span className="flex items-center gap-1">
                     <Flame className="h-3.5 w-3.5" /> Bônus Promoção ({matchedCampaign?.title}) (+{formatBRL(promoDiscountPerLiter)}/L)
                   </span>

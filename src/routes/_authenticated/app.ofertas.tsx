@@ -119,7 +119,7 @@ export default function CustomerOffersScreen() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-card">
+          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-card">
             <Flame className="h-5 w-5" />
           </div>
           <div>
@@ -130,9 +130,9 @@ export default function CustomerOffersScreen() {
       </div>
 
       {/* Banner Informativo */}
-      <div className="rounded-2xl bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-transparent p-4 border border-amber-500/30">
+      <div className="rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-transparent p-4 border border-emerald-500/30">
         <div className="flex items-start gap-3">
-          <Sparkles className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+          <Sparkles className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
           <div>
             <p className="text-xs font-bold text-foreground">Como participar?</p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
@@ -165,7 +165,7 @@ export default function CustomerOffersScreen() {
                 key={camp.id}
                 className={`relative overflow-hidden rounded-3xl border bg-card p-5 shadow-card transition ${
                   isToday
-                    ? "border-amber-500/40 ring-1 ring-amber-500/20"
+                    ? "border-emerald-500/40 ring-1 ring-emerald-500/20"
                     : "border-border opacity-95"
                 }`}
               >
@@ -208,8 +208,8 @@ export default function CustomerOffersScreen() {
                           className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold ${
                             active
                               ? isCurrentDay
-                                ? "bg-amber-500 text-white ring-2 ring-amber-400/50"
-                                : "bg-primary text-primary-foreground"
+                                ? "bg-primary text-primary-foreground ring-2 ring-primary/40"
+                                : "bg-primary/80 text-primary-foreground"
                               : "bg-muted text-muted-foreground/40"
                           }`}
                         >
@@ -233,7 +233,7 @@ export default function CustomerOffersScreen() {
                   onClick={() => openFuelModal(camp)}
                   className={`mt-4 w-full gap-2 rounded-2xl py-5 text-sm font-bold shadow-sm transition ${
                     isToday
-                      ? "bg-gradient-to-r from-amber-500 to-rose-500 text-white hover:opacity-95"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:opacity-95"
                       : "bg-primary text-primary-foreground"
                   }`}
                 >
@@ -253,7 +253,7 @@ export default function CustomerOffersScreen() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <Flame className="h-5 w-5 text-amber-500" />
+              <Flame className="h-5 w-5 text-emerald-500" />
               Ativar Desconto da Campanha
             </DialogTitle>
             <DialogDescription>
@@ -263,8 +263,8 @@ export default function CustomerOffersScreen() {
 
           {selectedCampaign && (
             <div className="space-y-4 pt-2 text-xs">
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 space-y-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 space-y-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                   Campanha Selecionada
                 </span>
                 <p className="text-sm font-bold text-foreground">{selectedCampaign.title}</p>
@@ -369,7 +369,7 @@ export default function CustomerOffersScreen() {
             <Button
               onClick={() => tokenMutation.mutate()}
               disabled={tokenMutation.isPending}
-              className="gap-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold shadow-md"
+              className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-md hover:opacity-90"
             >
               <Zap className="h-4 w-4" />
               {tokenMutation.isPending ? "Gerando Token..." : "Gerar Token de Abastecimento"}

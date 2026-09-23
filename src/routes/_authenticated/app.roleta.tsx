@@ -59,7 +59,7 @@ function MobileRoletaScreen() {
       {/* Background Decorative Glow que cresce ao girar */}
       <div
         className={`absolute top-20 left-1/2 -translate-x-1/2 rounded-full blur-3xl pointer-events-none -z-10 transition-all duration-700 ${
-          mustSpin ? "w-96 h-96 bg-amber-500/35" : "w-72 h-72 bg-amber-500/15"
+          mustSpin ? "w-96 h-96 bg-emerald-500/35" : "w-72 h-72 bg-emerald-500/15"
         }`}
       />
 
@@ -72,15 +72,15 @@ function MobileRoletaScreen() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <span className="text-sm font-extrabold flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
-          <Sparkles className="h-4 w-4 text-amber-500" /> Roleta da Sorte
+        <span className="text-sm font-extrabold flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+          <Sparkles className="h-4 w-4 text-emerald-500" /> Roleta da Sorte
         </span>
         <div className="w-10" />
       </div>
 
       {/* Hero Header */}
       <div className={`mt-4 text-center space-y-1.5 transition-all duration-500 ${mustSpin ? "opacity-25 scale-95" : "opacity-100 scale-100"}`}>
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-amber-500/20 border border-amber-500/30 px-3.5 py-1 text-xs font-black text-amber-600 dark:text-amber-400 shadow-xs">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-emerald-500/20 border border-emerald-500/30 px-3.5 py-1 text-xs font-black text-emerald-600 dark:text-emerald-400 shadow-xs">
           <Gift className="h-3.5 w-3.5 animate-bounce" /> Giro Diário Disponível!
         </div>
         <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
@@ -110,7 +110,7 @@ function MobileRoletaScreen() {
 
       {/* Bottom Controls */}
       <div className={`mt-auto space-y-3 transition-all duration-500 ${mustSpin ? "opacity-80" : "opacity-100"}`}>
-        <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-card p-3 text-center text-xs">
+        <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-card p-3 text-center text-xs">
           <p className="text-muted-foreground">
             🎯 Todos os giros têm prêmio garantido para o seu próximo abastecimento.
           </p>
@@ -119,7 +119,7 @@ function MobileRoletaScreen() {
         <button
           onClick={() => spinMutation.mutate()}
           disabled={mustSpin || spinMutation.isPending}
-          className="w-full relative overflow-hidden flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 px-6 py-4 text-base font-black text-slate-950 shadow-xl shadow-amber-500/25 hover:opacity-95 disabled:opacity-50 transition active:scale-[0.98] cursor-pointer"
+          className="w-full relative overflow-hidden flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-600 px-6 py-4 text-base font-black text-slate-950 shadow-xl shadow-emerald-500/25 hover:opacity-95 disabled:opacity-50 transition active:scale-[0.98] cursor-pointer"
         >
           {spinMutation.isPending ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -137,16 +137,16 @@ function MobileRoletaScreen() {
       {/* Winner Celebration Modal */}
       {showWinnerModal && wonPrize && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
-          <div className="relative w-full max-w-sm rounded-3xl border border-amber-500/40 bg-card p-6 text-center shadow-2xl space-y-4 overflow-hidden">
+          <div className="relative w-full max-w-sm rounded-3xl border border-emerald-500/40 bg-card p-6 text-center shadow-2xl space-y-4 overflow-hidden">
             {/* Modal Glow Header */}
-            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-40 h-40 bg-amber-500/25 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-40 h-40 bg-emerald-500/25 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/30">
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-tr from-emerald-500 via-emerald-400 to-teal-300 text-slate-950 shadow-lg shadow-emerald-500/30">
               {wonPrize.isWin ? <Trophy className="h-10 w-10 animate-bounce" /> : <Gift className="h-10 w-10" />}
             </div>
 
             <div>
-              <span className="inline-block rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <span className="inline-block rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                 {wonPrize.isWin ? "🎉 Parabéns! Você foi Premiado!" : "Resultado da Roleta"}
               </span>
               <h2 className="mt-2 text-2xl font-black tracking-tight text-foreground">{wonPrize.label}</h2>
@@ -167,7 +167,7 @@ function MobileRoletaScreen() {
                 setShowWinnerModal(false);
                 navigate({ to: "/app/token" });
               }}
-              className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-black text-slate-950 shadow-md hover:opacity-90 transition active:scale-95"
+              className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 text-sm font-black text-white shadow-md hover:opacity-90 transition active:scale-95"
             >
               Resgatar na Bomba →
             </button>

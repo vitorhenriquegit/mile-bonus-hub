@@ -143,13 +143,13 @@ function TokenScreen() {
 
       {/* Alerta de Campanhas Promocionais Hoje */}
       {campaignsQuery.data && campaignsQuery.data.some((c: any) => c.isTodayActive) && (
-        <div className="mt-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-card p-4 text-xs shadow-xs">
+        <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-card p-4 text-xs shadow-xs">
           <div className="flex items-start gap-2.5">
-            <div className="grid h-7 w-7 place-items-center rounded-xl bg-amber-500 text-white shrink-0 mt-0.5 shadow-xs">
+            <div className="grid h-7 w-7 place-items-center rounded-xl bg-primary text-primary-foreground shrink-0 mt-0.5 shadow-xs">
               <Flame className="h-4 w-4" />
             </div>
             <div>
-              <span className="font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider text-[10px]">
+              <span className="font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider text-[10px]">
                 🔥 Desconto Turbinado Hoje!
               </span>
               {campaignsQuery.data

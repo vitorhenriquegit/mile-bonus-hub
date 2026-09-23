@@ -71,7 +71,7 @@ function HomeScreen() {
 
       <div
         className="relative overflow-hidden rounded-3xl p-5 text-white shadow-float"
-        style={{ background: "var(--gradient-tier-gold)" }}
+        style={{ background: "var(--gradient-primary)" }}
       >
         <div className="flex items-center justify-between">
           <div>
@@ -130,7 +130,7 @@ function HomeScreen() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <Flame className="h-4 w-4 text-amber-500" />
+              <Flame className="h-4 w-4 text-emerald-500" />
               <h2 className="text-sm font-bold text-foreground">Campanhas & Descontos</h2>
             </div>
             <Link to="/app/ofertas" className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
@@ -151,7 +151,7 @@ function HomeScreen() {
                   key={camp.id}
                   className={`relative overflow-hidden rounded-2xl border p-4 shadow-card transition ${
                     isToday
-                      ? "border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-card"
+                      ? "border-emerald-500/40 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-card"
                       : "border-border bg-card"
                   }`}
                 >
@@ -204,20 +204,20 @@ function HomeScreen() {
       {/* Lucky Wheel Promo Card */}
       <Link
         to="/app/roleta"
-        className="flex items-center justify-between rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 shadow-card transition hover:scale-[1.01]"
+        className="flex items-center justify-between rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-4 shadow-card transition hover:scale-[1.01]"
       >
         <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500 text-white shadow-sm">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Gift className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
               <Sparkles className="h-3 w-3" /> Roleta da Sorte
             </p>
             <p className="text-sm font-bold">Gire e ganhe prêmios hoje!</p>
           </div>
         </div>
-        <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Girar →</span>
+        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Girar →</span>
       </Link>
 
       <div className="rounded-2xl border border-border bg-card p-4">
