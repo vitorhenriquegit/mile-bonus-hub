@@ -5,6 +5,8 @@ import { Search, Fuel, ShieldCheck, CheckCircle2, Loader2, RefreshCw, Zap, Flame
 import { toast } from "sonner";
 import { lookupCustomerToken, registerFueling, getStations, getActiveCustomerCampaigns } from "@/lib/loyalty.functions";
 import { formatBRL, maskCpf, tierFor, type Tier } from "@/lib/loyalty";
+import { useNiche } from "@/lib/niche-context";
+import { NicheIcon } from "@/components/NicheIcon";
 
 export function AttendantTerminal({
   onSuccess,
@@ -13,16 +15,18 @@ export function AttendantTerminal({
   onSuccess?: () => void;
   defaultStationId?: string;
 }) {
+  const { currentNiche } = useNiche();
   const queryClient = useQueryClient();
   const lookupFn = useServerFn(lookupCustomerToken);
   const registerFn = useServerFn(registerFueling);
   const stationsFn = useServerFn(getStations);
   const campaignsFn = useServerFn(getActiveCustomerCampaigns);
 
+  const defaultCatalogItem = currentNiche.catalogItems[0] || { name: "Serviço Padrão", unitPrice: 100 };
   const [queryInput, setQueryInput] = useState("");
   const [selectedStation, setSelectedStation] = useState(defaultStationId || "");
-  const [fuelType, setFuelType] = useState("Gasolina Comum");
-  const [pricePerLiter, setPricePerLiter] = useState("5.89");
+  const [fuelType, setFuelType] = useState(defaultCatalogItem.name);
+  const [pricePerLiter, setPricePerLiter] = useState(String(defaultCatalogItem.unitPrice));
   const [litersInput, setLitersInput] = useState("");
 
   const stationsQuery = useQuery({ queryKey: ["stations"], queryFn: () => stationsFn({}) });
@@ -47,11 +51,11 @@ export function AttendantTerminal({
     onSuccess: (data: any) => {
       if (data.appliedCampaign) {
         toast.success(
-          `🎉 Promoção "${data.appliedCampaign.title}" aplicada! Desconto de ${formatBRL(data.discountPerLiter)}/L concedido. Economia total: ${formatBRL(data.discountTotal)}.`,
+          `🎉 Promoção "${data.appliedCampaign.title}" aplicada! Desconto de ${formatBRL(data.discountPerLiter)}/${currentNiche.terms.metricShort} concedido. Economia total: ${formatBRL(data.discountTotal)}.`,
         );
       } else {
         toast.success(
-          `Abastecimento registrado com sucesso! Economia de ${formatBRL(data.discountTotal)} no abastecimento.`,
+          `${currentNiche.terms.transactionSingular} registrado(a) com sucesso! Economia de ${formatBRL(data.discountTotal)} concedida ao cliente.`,
         );
       }
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -61,7 +65,7 @@ export function AttendantTerminal({
       if (onSuccess) onSuccess();
     },
     onError: (err: any) => {
-      toast.error(err.message || "Erro ao registrar abastecimento.");
+      toast.error(err.message || `Erro ao registrar ${currentNiche.terms.transactionSingular.toLowerCase()}.`);
     },
   });
 
@@ -69,6 +73,8 @@ export function AttendantTerminal({
     lookupMutation.reset();
     setQueryInput("");
     setLitersInput("");
+    setFuelType(defaultCatalogItem.name);
+    setPricePerLiter(String(defaultCatalogItem.unitPrice));
   };
 
   const lookupData = lookupMutation.data;
@@ -157,11 +163,13 @@ export function AttendantTerminal({
       <div className="flex items-center justify-between border-b border-border pb-4">
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <Fuel className="h-5 w-5" />
+            <NicheIcon name={currentNiche.iconName} className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold">Terminal do Frentista</h2>
-            <p className="text-xs text-muted-foreground">Validação de Token e Registro Direto na Bomba</p>
+            <h2 className="text-base font-bold">{currentNiche.terms.terminalLabel}</h2>
+            <p className="text-xs text-muted-foreground">
+              Validação de Token e Registro Direto no(a) {currentNiche.terms.locationLabel}
+            </p>
           </div>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
@@ -203,9 +211,9 @@ export function AttendantTerminal({
           </div>
 
           <div className="rounded-xl bg-accent/50 p-4 text-xs text-muted-foreground">
-            <p className="font-semibold text-foreground">💡 Como funciona na pista:</p>
+            <p className="font-semibold text-foreground">💡 Como funciona no(a) {currentNiche.terms.locationLabel}:</p>
             <p className="mt-1">
-              Peça ao cliente o <b>código de 6 dígitos</b> gerado no app ou informe o <b>CPF</b>. O sistema localiza o nível de fidelidade e calcula o desconto automático por litro.
+              Peça ao cliente o <b>código de 6 dígitos</b> gerado no app ou informe o <b>CPF</b>. O sistema localiza o nível de fidelidade e calcula o desconto ou benefício aplicável automaticamente.
             </p>
           </div>
         </form>
@@ -216,13 +224,13 @@ export function AttendantTerminal({
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-lg">{lookupData.customer.full_name || "Cliente FuelRewards"}</span>
+                  <span className="font-bold text-lg">{lookupData.customer.full_name || `Cliente ${currentNiche.terms.brandFallback}`}</span>
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                     CPF: {maskCpf(lookupData.customer.cpf)}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Galonagem no mês: <b>{volumeMonth.toFixed(1)}L</b>
+                  {currentNiche.terms.metricLabel} no mês: <b>{volumeMonth.toFixed(1)} {currentNiche.terms.metricShort}</b>
                 </p>
               </div>
               <button
@@ -249,30 +257,37 @@ export function AttendantTerminal({
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] uppercase font-bold tracking-wider opacity-90">Desconto Aplicado</p>
-                  <p className="text-lg font-black">{formatBRL(currentTier.discount_per_liter)}/L</p>
+                  <p className="text-lg font-black">{formatBRL(currentTier.discount_per_liter)}/{currentNiche.terms.metricShort}</p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Fueling Form Fields */}
+          {/* Form Fields adaptados ao nicho */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground">Combustível</label>
+              <label className="block text-xs font-semibold text-muted-foreground">Item / Serviço</label>
               <select
                 value={fuelType}
-                onChange={(e) => setFuelType(e.target.value)}
+                onChange={(e) => {
+                  const found = currentNiche.catalogItems.find((it) => it.name === e.target.value);
+                  setFuelType(e.target.value);
+                  if (found) setPricePerLiter(String(found.unitPrice));
+                }}
                 className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="Gasolina Comum">Gasolina Comum</option>
-                <option value="Gasolina Aditivada">Gasolina Aditivada</option>
-                <option value="Etanol">Etanol</option>
-                <option value="Diesel S10">Diesel S10</option>
+                {currentNiche.catalogItems.map((item) => (
+                  <option key={item.id} value={item.name}>
+                    {item.name} ({formatBRL(item.unitPrice)})
+                  </option>
+                ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground">Preço Sem Desconto (R$/L)</label>
+              <label className="block text-xs font-semibold text-muted-foreground">
+                Preço Unitário (R$/{currentNiche.terms.metricShort})
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -284,12 +299,14 @@ export function AttendantTerminal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground">Litros Abastecidos</label>
+              <label className="block text-xs font-semibold text-muted-foreground">
+                Volume / Quantidade ({currentNiche.terms.metricShort})
+              </label>
               <input
                 type="number"
                 step="0.1"
                 min="0.1"
-                placeholder="Ex: 35.5"
+                placeholder="Ex: 1"
                 value={litersInput}
                 onChange={(e) => setLitersInput(e.target.value)}
                 className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary"
@@ -300,7 +317,9 @@ export function AttendantTerminal({
 
           {stationsQuery.data && stationsQuery.data.length > 0 && (
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground">Posto de Abastecimento</label>
+              <label className="block text-xs font-semibold text-muted-foreground">
+                Unidade / Estabelecimento
+              </label>
               <select
                 value={selectedStation}
                 onChange={(e) => setSelectedStation(e.target.value)}
@@ -330,10 +349,10 @@ export function AttendantTerminal({
                     <strong className="text-xs font-bold text-foreground">{matchedCampaign.title}</strong>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Abastecimento de <b>{formatBRL(originalTotal)}</b> se enquadra na regra (mínimo de {formatBRL(matchedCampaign.minFuelAmount)}).
+                    Atendimento de <b>{formatBRL(originalTotal)}</b> se enquadra na regra (mínimo de {formatBRL(matchedCampaign.minFuelAmount)}).
                   </p>
                   <p className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-                    Bônus Promocional Concedido: +{formatBRL(promoDiscountPerLiter)}/L acumulado com o nível {currentTier?.name}!
+                    Bônus Promocional Concedido: +{formatBRL(promoDiscountPerLiter)}/{currentNiche.terms.metricShort} acumulado com o nível {currentTier?.name}!
                   </p>
                 </div>
               </div>
@@ -345,9 +364,9 @@ export function AttendantTerminal({
               <div className="flex items-start gap-2">
                 <Sparkles className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-blue-700 dark:text-blue-300">Dica de Pista para o Frentista:</strong>
+                  <strong className="text-blue-700 dark:text-blue-300">Dica para o {currentNiche.terms.operatorLabel}:</strong>
                   <p className="text-muted-foreground mt-0.5">
-                    Faltam apenas <b>{formatBRL(almostCampaign.minFuelAmount - originalTotal)}</b> para este cliente ganhar <b>+{formatBRL(almostCampaign.discountValue)}/L</b> na promoção <b>"{almostCampaign.title}"</b>!
+                    Faltam apenas <b>{formatBRL(almostCampaign.minFuelAmount - originalTotal)}</b> para este cliente ganhar <b>+{formatBRL(almostCampaign.discountValue)}/{currentNiche.terms.metricShort}</b> na promoção <b>"{almostCampaign.title}"</b>!
                   </p>
                 </div>
               </div>
@@ -358,13 +377,13 @@ export function AttendantTerminal({
           {liters > 0 && (
             <div className="rounded-2xl border border-border bg-muted/40 p-4 space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Valor original ({liters.toFixed(1)}L × {formatBRL(unitPrice)})</span>
+                <span>Valor original ({liters.toFixed(1)} {currentNiche.terms.metricShort} × {formatBRL(unitPrice)})</span>
                 <span className="line-through">{formatBRL(originalTotal)}</span>
               </div>
 
               {/* Detalhe do Nível */}
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Desconto Nível {currentTier?.name} ({formatBRL(tierDiscountPerLiter)}/L)</span>
+                <span>Desconto Nível {currentTier?.name} ({formatBRL(tierDiscountPerLiter)}/{currentNiche.terms.metricShort})</span>
                 <span>−{formatBRL(liters * tierDiscountPerLiter)}</span>
               </div>
 
@@ -372,14 +391,14 @@ export function AttendantTerminal({
               {promoDiscountPerLiter > 0 && (
                 <div className="flex justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   <span className="flex items-center gap-1">
-                    <Flame className="h-3.5 w-3.5" /> Bônus Promoção ({matchedCampaign?.title}) (+{formatBRL(promoDiscountPerLiter)}/L)
+                    <Flame className="h-3.5 w-3.5" /> Bônus Promoção ({matchedCampaign?.title}) (+{formatBRL(promoDiscountPerLiter)}/{currentNiche.terms.metricShort})
                   </span>
                   <span>−{formatBRL(liters * promoDiscountPerLiter)}</span>
                 </div>
               )}
 
               <div className="flex justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400 border-t border-border/40 pt-1.5">
-                <span>Desconto Total na Bomba ({formatBRL(totalDiscountPerLiter)}/L)</span>
+                <span>Desconto Total Concedido ({formatBRL(totalDiscountPerLiter)}/{currentNiche.terms.metricShort})</span>
                 <span>−{formatBRL(discountTotal)}</span>
               </div>
 
@@ -412,7 +431,7 @@ export function AttendantTerminal({
               ) : (
                 <CheckCircle2 className="h-5 w-5" />
               )}
-              Confirmar Abastecimento
+              Confirmar {currentNiche.terms.actionVerb}
             </button>
           </div>
         </form>

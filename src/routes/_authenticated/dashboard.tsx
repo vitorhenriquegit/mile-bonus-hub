@@ -26,6 +26,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useNiche } from "@/lib/niche-context";
+import { NicheSelectorModal } from "@/components/NicheSelectorModal";
+import { NicheIcon } from "@/components/NicheIcon";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   ssr: false,
@@ -44,32 +47,6 @@ type NavModule = {
   items: NavItem[];
 };
 
-const navModules: NavModule[] = [
-  {
-    title: "Dashboards",
-    items: [
-      { to: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
-      { to: "/dashboard/clientes", label: "Inteligência de Clientes", icon: Brain },
-    ],
-  },
-  {
-    title: "Operação",
-    items: [
-      { to: "/dashboard/monitor", label: "Monitor de Pista", icon: Radio, badge: "Ao vivo" },
-      { to: "/dashboard/seguranca", label: "Segurança & Fraude", icon: ShieldAlert },
-      { to: "/dashboard/regras", label: "Tiers e Regras", icon: SlidersHorizontal },
-    ],
-  },
-  {
-    title: "Marketing",
-    items: [
-      { to: "/dashboard/campanhas", label: "Campanhas Promocionais", icon: Megaphone },
-      { to: "/dashboard/banners", label: "Banners do App", icon: Layers },
-      { to: "/dashboard/roleta", label: "Roleta da Sorte", icon: Sparkles },
-    ],
-  },
-];
-
 function NavigationContent({
   pathname,
   onNavigate,
@@ -77,6 +54,39 @@ function NavigationContent({
   pathname: string;
   onNavigate?: () => void;
 }) {
+  const { currentNiche } = useNiche();
+
+  const navModules: NavModule[] = [
+    {
+      title: "Dashboards",
+      items: [
+        { to: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
+        { to: "/dashboard/clientes", label: "Inteligência de Clientes", icon: Brain },
+      ],
+    },
+    {
+      title: "Operação",
+      items: [
+        {
+          to: "/dashboard/monitor",
+          label: currentNiche.terms.terminalLabel,
+          icon: Radio,
+          badge: "Ao vivo",
+        },
+        { to: "/dashboard/seguranca", label: "Segurança & Fraude", icon: ShieldAlert },
+        { to: "/dashboard/regras", label: "Tiers e Regras", icon: SlidersHorizontal },
+      ],
+    },
+    {
+      title: "Marketing",
+      items: [
+        { to: "/dashboard/campanhas", label: "Campanhas Promocionais", icon: Megaphone },
+        { to: "/dashboard/banners", label: "Banners do App", icon: Layers },
+        { to: "/dashboard/roleta", label: "Roleta da Sorte", icon: Sparkles },
+      ],
+    },
+  ];
+
   return (
     <nav className="space-y-6">
       {navModules.map((module) => (
@@ -127,6 +137,7 @@ function NavigationContent({
 }
 
 function DashboardShell() {
+  const { currentNiche } = useNiche();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -151,10 +162,10 @@ function DashboardShell() {
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-sidebar-border/40 bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center gap-2 px-5 py-5 border-b border-sidebar-border/40 shrink-0">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-card">
-            <Fuel className="h-5 w-5" />
+            <NicheIcon name={currentNiche.iconName} className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-bold leading-none">FuelRewards</p>
+            <p className="text-sm font-bold leading-none">{currentNiche.terms.brandFallback}</p>
             <p className="mt-1 text-[10px] uppercase tracking-wider opacity-60">
               Painel do Gestor
             </p>
@@ -167,8 +178,10 @@ function DashboardShell() {
 
         <div className="mt-auto p-4 border-t border-sidebar-border/40 shrink-0">
           <div className="rounded-xl bg-sidebar-accent p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider opacity-60">Posto Ativo</p>
-            <p className="text-xs font-semibold truncate mt-0.5">{activeStation?.name || "Posto Matriz"}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider opacity-60">
+              Unidade Ativa ({currentNiche.terms.locationLabel})
+            </p>
+            <p className="text-xs font-semibold truncate mt-0.5">{activeStation?.name || "Unidade Matriz"}</p>
             <p className="text-[11px] opacity-75">
               {activeStation?.city ? `${activeStation.city}/${activeStation.state}` : "Rede Principal"}
             </p>
@@ -201,10 +214,10 @@ function DashboardShell() {
                 <SheetHeader className="p-4 border-b border-sidebar-border/40 text-left">
                   <div className="flex items-center gap-2">
                     <div className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground shadow-card">
-                      <Fuel className="h-4 w-4" />
+                      <NicheIcon name={currentNiche.iconName} className="h-4 w-4" />
                     </div>
                     <div>
-                      <SheetTitle className="text-sm font-bold leading-none text-sidebar-foreground">FuelRewards</SheetTitle>
+                      <SheetTitle className="text-sm font-bold leading-none text-sidebar-foreground">{currentNiche.terms.brandFallback}</SheetTitle>
                       <SheetDescription className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60 mt-1">
                         Painel do Gestor
                       </SheetDescription>
@@ -218,8 +231,10 @@ function DashboardShell() {
 
                 <div className="mt-auto p-4 border-t border-sidebar-border/40">
                   <div className="rounded-xl bg-sidebar-accent p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider opacity-60">Posto Ativo</p>
-                    <p className="text-xs font-semibold truncate mt-0.5">{activeStation?.name || "Posto Matriz"}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider opacity-60">
+                      Unidade Ativa ({currentNiche.terms.locationLabel})
+                    </p>
+                    <p className="text-xs font-semibold truncate mt-0.5">{activeStation?.name || "Unidade Matriz"}</p>
                     <p className="text-[11px] opacity-75">
                       {activeStation?.city ? `${activeStation.city}/${activeStation.state}` : "Rede Principal"}
                     </p>
@@ -235,13 +250,18 @@ function DashboardShell() {
               </SheetContent>
             </Sheet>
 
-            <span className="text-sm font-bold">FuelRewards</span>
+            <span className="text-sm font-bold">{currentNiche.terms.brandFallback}</span>
+          </div>
+
+          {/* Seletor de Nicho/Segmento */}
+          <div className="flex items-center gap-2">
+            <NicheSelectorModal />
           </div>
 
           {stationsQuery.data && stationsQuery.data.length > 0 && (
             <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-primary" />
-              <span>Posto:</span>
+              <span>Unidade:</span>
               <select
                 value={selectedStationId || activeStation?.id || ""}
                 onChange={(e) => setSelectedStationId(e.target.value)}

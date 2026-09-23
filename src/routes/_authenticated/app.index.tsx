@@ -5,6 +5,8 @@ import { Bell, Fuel, Zap, TrendingUp, Loader2, Sparkles, Gift, Flame, ArrowRight
 import { getMyOverview, getTiers, getActiveCustomerCampaigns, getActiveCustomerBanners } from "@/lib/loyalty.functions";
 import { formatBRL, tierFor, type Tier, type PromotionalBanner } from "@/lib/loyalty";
 import { HomeBannerSlider } from "@/components/HomeBannerSlider";
+import { useNiche } from "@/lib/niche-context";
+import { NicheIcon } from "@/components/NicheIcon";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   ssr: false,
@@ -22,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/app/")({
 });
 
 function HomeScreen() {
+  const { currentNiche } = useNiche();
   const navigate = useNavigate();
   const overviewFn = useServerFn(getMyOverview);
   const tiersFn = useServerFn(getTiers);
@@ -44,7 +47,7 @@ function HomeScreen() {
   const tiers = (tiersQuery.data ?? []) as unknown as Tier[];
   const volume = overview.data?.volumeMonth ?? 0;
   const saved = overview.data?.savedMonth ?? 0;
-  const firstName = (overview.data?.profile?.full_name || "Motorista").split(" ")[0];
+  const firstName = (overview.data?.profile?.full_name || currentNiche.terms.clientLabel).split(" ")[0];
   const { current, next, isMax } = tierFor(volume, tiers);
   const nextMinLiters = next?.min_liters ?? 50;
   const currentMinLiters = current?.min_liters ?? 0;
@@ -57,7 +60,7 @@ function HomeScreen() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <Fuel className="h-5 w-5" />
+            <NicheIcon name={currentNiche.iconName} className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">Olá,</p>
@@ -84,10 +87,10 @@ function HomeScreen() {
         </div>
 
         <div className="mt-5 rounded-2xl bg-white/15 p-4 backdrop-blur">
-          <p className="text-xs opacity-90">Seu desconto agora</p>
+          <p className="text-xs opacity-90">{currentNiche.terms.rewardTypeLabel}</p>
           <p className="mt-1 text-3xl font-black tracking-tight">
             {formatBRL(current.discount_per_liter)}
-            <span className="ml-1 text-base font-semibold opacity-90">/litro</span>
+            <span className="ml-1 text-base font-semibold opacity-90">/{currentNiche.terms.metricShort}</span>
           </p>
         </div>
 
@@ -95,7 +98,7 @@ function HomeScreen() {
           <div className="mt-5">
             <div className="mb-2 flex items-center justify-between text-xs font-medium">
               <span>
-                Faltam <b>{litersToNext.toFixed(0)}L</b> para {next.name}
+                Faltam <b>{litersToNext.toFixed(0)} {currentNiche.terms.metricShort}</b> para {next.name}
               </span>
               <span>{progress}%</span>
             </div>
@@ -103,17 +106,17 @@ function HomeScreen() {
               <div className="h-full rounded-full bg-white" style={{ width: `${progress}%` }} />
             </div>
             <p className="mt-2 text-xs opacity-90">
-              No próximo nível você ganha <b>{formatBRL(next.discount_per_liter)}/L</b>
+              No próximo nível você ganha <b>{formatBRL(next.discount_per_liter)}/{currentNiche.terms.metricShort}</b>
             </p>
           </div>
         ) : (
           <p className="mt-5 text-xs font-medium opacity-90">
-            Você está no nível máximo. Continue abastecendo!
+            Você está no nível máximo. Continue aproveitando suas vantagens!
           </p>
         )}
       </div>
 
-      {/* Banners Promocionais & Destaques do Posto */}
+      {/* Banners Promocionais & Destaques */}
       {bannersQuery.data && bannersQuery.data.length > 0 && (
         <div className="space-y-1.5">
           <HomeBannerSlider banners={bannersQuery.data} />
@@ -121,7 +124,11 @@ function HomeScreen() {
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        <StatCard label="Volume no mês" value={`${volume.toFixed(0)}L`} icon={<Fuel className="h-4 w-4" />} />
+        <StatCard
+          label={`${currentNiche.terms.metricLabel} no mês`}
+          value={`${volume.toFixed(0)} ${currentNiche.terms.metricShort}`}
+          icon={<NicheIcon name={currentNiche.iconName} className="h-4 w-4" />}
+        />
         <StatCard label="Economizado" value={formatBRL(saved)} icon={<TrendingUp className="h-4 w-4" />} accent />
       </div>
 
@@ -184,7 +191,7 @@ function HomeScreen() {
                       className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-xs transition hover:bg-primary/90"
                     >
                       <Zap className="h-3 w-3" />
-                      {camp.minFuelAmount > 0 ? `Abastecer ${formatBRL(camp.minFuelAmount)}` : "Abastecer"}
+                      {camp.minFuelAmount > 0 ? `Aproveitar a partir de ${formatBRL(camp.minFuelAmount)}` : "Aproveitar"}
                     </button>
                   </div>
                 </div>
@@ -198,7 +205,7 @@ function HomeScreen() {
         to="/app/token"
         className="rounded-2xl bg-primary px-5 py-4 text-center text-sm font-semibold text-primary-foreground shadow-float"
       >
-        Gerar token de abastecimento
+        Gerar token ({currentNiche.terms.actionVerb})
       </Link>
 
       {/* Lucky Wheel Promo Card */}
@@ -221,7 +228,7 @@ function HomeScreen() {
       </Link>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-sm font-semibold">Níveis do programa</p>
+        <p className="text-sm font-semibold">Níveis do programa ({currentNiche.badge})</p>
         <ul className="mt-3 space-y-2">
           {tiers.map((t) => {
             const isCurrent = t.name === current.name;
@@ -234,10 +241,10 @@ function HomeScreen() {
                   <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: `var(--${t.color})` }} />
                   <span className="font-medium">{t.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {t.min_liters}–{t.max_liters >= 9999 ? "∞" : t.max_liters}L
+                    {t.min_liters}–{t.max_liters >= 9999 ? "∞" : t.max_liters} {currentNiche.terms.metricShort}
                   </span>
                 </div>
-                <span className="font-semibold text-primary">{formatBRL(t.discount_per_liter)}/L</span>
+                <span className="font-semibold text-primary">{formatBRL(t.discount_per_liter)}/{currentNiche.terms.metricShort}</span>
               </li>
             );
           })}

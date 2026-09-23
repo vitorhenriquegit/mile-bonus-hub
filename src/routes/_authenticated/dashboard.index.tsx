@@ -34,6 +34,8 @@ import {
 import { getDashboardData, getTiers } from "@/lib/loyalty.functions";
 import { exportToCsv, formatBRL, maskCpf, type Tier } from "@/lib/loyalty";
 import { AttendantTerminal } from "@/components/AttendantTerminal";
+import { useNiche } from "@/lib/niche-context";
+import { NicheIcon } from "@/components/NicheIcon";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
   ssr: false,
@@ -51,6 +53,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/")({
 });
 
 function Overview() {
+  const { currentNiche } = useNiche();
   const [showTerminalModal, setShowTerminalModal] = useState(false);
   const dashFn = useServerFn(getDashboardData);
   const tiersFn = useServerFn(getTiers);
@@ -80,21 +83,47 @@ function Overview() {
     totalCustomers: 0,
     transactionsMonth: 0,
   };
-  const tm = (dash.data?.metrics as any)?.ticketMetrics || {
-    ticketWithApp: 248.5,
-    ticketWithoutApp: 172.3,
-    upliftPercent: 44.22,
-    incrementalPerTx: 76.2,
-    incrementalRevenue: 292608.0,
-    totalAppTransactions: 3840,
-  };
+
+  const serverTicketMetrics = (dash.data?.metrics as any)?.ticketMetrics;
+  const tm =
+    serverTicketMetrics && currentNiche.id === "fuel"
+      ? serverTicketMetrics
+      : {
+          ticketWithApp: currentNiche.terms.ticketBenchmarkApp,
+          ticketWithoutApp: currentNiche.terms.ticketBenchmarkNoApp,
+          upliftPercent:
+            Math.round(
+              ((currentNiche.terms.ticketBenchmarkApp - currentNiche.terms.ticketBenchmarkNoApp) /
+                currentNiche.terms.ticketBenchmarkNoApp) *
+                10000,
+            ) / 100,
+          incrementalPerTx:
+            Math.round(
+              (currentNiche.terms.ticketBenchmarkApp - currentNiche.terms.ticketBenchmarkNoApp) * 10,
+            ) / 10,
+          incrementalRevenue:
+            Math.round(
+              (currentNiche.terms.ticketBenchmarkApp - currentNiche.terms.ticketBenchmarkNoApp) *
+                (m.transactionsMonth || 3840),
+            ),
+          totalAppTransactions: m.transactionsMonth || 3840,
+        };
+
   const dailySeries = dash.data?.dailySeries || [];
   const recent = dash.data?.recent || [];
   const tiers = (tiersQuery.data ?? []) as unknown as Tier[];
   const avgDiscount = m.volumeMonth > 0 ? m.discountsGranted / m.volumeMonth : 0;
 
   const handleExportCsv = () => {
-    const headers = ["ID", "Data", "Cliente/CPF", "Combustível", "Volume (L)", "Desconto Total (R$)", "Total Pago (R$)"];
+    const headers = [
+      "ID",
+      "Data",
+      "Cliente/CPF",
+      "Item/Serviço",
+      `${currentNiche.terms.metricLabel} (${currentNiche.terms.metricShort})`,
+      "Desconto Total (R$)",
+      "Total Pago (R$)",
+    ];
     const rows = recent.map((tx) => [
       tx.id,
       new Date(tx.created_at).toLocaleString("pt-BR"),
@@ -104,7 +133,7 @@ function Overview() {
       Number(tx.discount_total).toFixed(2),
       Number(tx.total).toFixed(2),
     ]);
-    exportToCsv("relatorio_abastecimentos_fuelrewards", headers, rows);
+    exportToCsv(`relatorio_${currentNiche.id}_fidelidade`, headers, rows);
   };
 
   return (
@@ -113,7 +142,7 @@ function Overview() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Inteligência de Vendas</h1>
           <p className="text-sm text-muted-foreground">
-            Performance do programa de fidelidade · dados do mês corrente
+            Performance do programa de fidelidade · {currentNiche.name}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -122,7 +151,7 @@ function Overview() {
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-90"
           >
             <ShieldCheck className="h-4 w-4" />
-            Validar Token de Frentista
+            Validar Token ({currentNiche.terms.operatorLabel})
           </button>
           <button
             onClick={handleExportCsv}
@@ -155,28 +184,28 @@ function Overview() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
-          label="Volume Abastecido (Galonagem)"
-          value={`${m.volumeMonth.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L`}
-          icon={<Fuel className="h-4 w-4" />}
+          label={currentNiche.terms.metricLabel}
+          value={`${m.volumeMonth.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} ${currentNiche.terms.metricShort}`}
+          icon={<NicheIcon name={currentNiche.iconName} className="h-4 w-4" />}
           hint="mês corrente"
         />
         <Kpi
           label="Descontos Concedidos"
           value={formatBRL(m.discountsGranted)}
           icon={<Percent className="h-4 w-4" />}
-          hint={`média ${formatBRL(avgDiscount)}/L`}
+          hint={`média ${formatBRL(avgDiscount)} / ${currentNiche.terms.metricShort}`}
         />
         <Kpi
-          label="Novos Clientes no App"
+          label={`Novos ${currentNiche.terms.clientLabel} no App`}
           value={m.newCustomers.toLocaleString("pt-BR")}
           icon={<UserPlus className="h-4 w-4" />}
           hint="cadastros neste mês"
         />
         <Kpi
-          label="Base total de clientes"
+          label={`Base Total de ${currentNiche.terms.clientLabel}`}
           value={m.totalCustomers.toLocaleString("pt-BR")}
           icon={<Users className="h-4 w-4" />}
-          hint={`${m.transactionsMonth} transações no mês`}
+          hint={`${m.transactionsMonth} ${currentNiche.terms.transactionPlural.toLowerCase()} no mês`}
         />
       </div>
 
@@ -193,7 +222,7 @@ function Overview() {
                   Impacto do App no Ticket Médio e Receita
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Comparativo de consumo entre clientes fidelizados via aplicativo vs. clientes avulsos na pista
+                  Comparativo de consumo entre clientes fidelizados via aplicativo vs. clientes avulsos no(a) {currentNiche.terms.locationLabel}
                 </p>
               </div>
             </div>
@@ -224,7 +253,7 @@ function Overview() {
                     {formatBRL(Number(tm.ticketWithApp))}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Gasto médio por abastecimento no app
+                    Gasto médio por {currentNiche.terms.transactionSingular.toLowerCase()} no app
                   </p>
                 </div>
                 <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
@@ -237,8 +266,8 @@ function Overview() {
               <div className="rounded-xl border border-border bg-muted/30 p-4 transition">
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    <Fuel className="h-3.5 w-3.5" />
-                    Sem App (Pista Comum)
+                    <NicheIcon name={currentNiche.iconName} className="h-3.5 w-3.5" />
+                    Sem App ({currentNiche.terms.locationLabel} Comum)
                   </span>
                   <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                     Referência
@@ -249,11 +278,11 @@ function Overview() {
                     {formatBRL(Number(tm.ticketWithoutApp))}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Média de motoristas sem identificação
+                    Média de {currentNiche.terms.clientLabel.toLowerCase()} sem identificação
                   </p>
                 </div>
                 <div className="mt-3 text-xs text-muted-foreground">
-                  Base histórica de pista do posto
+                  Base histórica de {currentNiche.terms.locationLabel} do estabelecimento
                 </div>
               </div>
             </div>
@@ -261,7 +290,9 @@ function Overview() {
             {/* Barra Visual de Comparação Proporcional */}
             <div className="rounded-xl border border-border/60 bg-muted/20 p-3.5">
               <div className="flex items-center justify-between text-xs font-medium">
-                <span className="text-muted-foreground">Proporção de valor por abastecimento</span>
+                <span className="text-muted-foreground">
+                  Proporção de valor por {currentNiche.terms.transactionSingular.toLowerCase()}
+                </span>
                 <span className="font-bold text-primary">
                   Diferença: +{formatBRL(Number(tm.incrementalPerTx))} (+{Number(tm.upliftPercent).toFixed(1)}%)
                 </span>
@@ -283,7 +314,9 @@ function Overview() {
                 />
               </div>
               <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>Pista Comum: {formatBRL(Number(tm.ticketWithoutApp))}</span>
+                <span>
+                  {currentNiche.terms.locationLabel} Comum: {formatBRL(Number(tm.ticketWithoutApp))}
+                </span>
                 <span className="font-semibold text-foreground">
                   Com Fidelidade: {formatBRL(Number(tm.ticketWithApp))}
                 </span>
@@ -316,7 +349,7 @@ function Overview() {
                   <strong className="text-foreground">
                     {Number(tm.totalAppTransactions).toLocaleString("pt-BR")}
                   </strong>{" "}
-                  abastecimentos realizados com o aplicativo no período.
+                  {currentNiche.terms.transactionPlural.toLowerCase()} realizados com o aplicativo no período.
                 </p>
               </div>
             </div>
@@ -334,11 +367,13 @@ function Overview() {
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold">Galonagem Diária vs. Descontos Aplicados</p>
-            <p className="text-xs text-muted-foreground">Litros abastecidos e desconto pago (R$) por dia</p>
+            <p className="text-sm font-semibold">{currentNiche.terms.metricLabel} Diária vs. Descontos Aplicados</p>
+            <p className="text-xs text-muted-foreground">
+              {currentNiche.terms.metricLabel} e desconto concedido (R$) por dia
+            </p>
           </div>
           <div className="flex items-center gap-4 text-xs">
-            <Legenda color="var(--primary)" label="Volume (L)" />
+            <Legenda color="var(--primary)" label={`${currentNiche.terms.metricLabel} (${currentNiche.terms.metricShort})`} />
             <Legenda color="oklch(0.55 0.18 250)" label="Descontos (R$)" />
           </div>
         </div>
@@ -357,12 +392,29 @@ function Overview() {
                   fontSize: 12,
                 }}
                 formatter={(value: number, name: string) =>
-                  name === "Descontos (R$)" ? [formatBRL(value), name] : [`${value.toLocaleString("pt-BR")} L`, name]
+                  name === "Descontos (R$)"
+                    ? [formatBRL(value), name]
+                    : [`${value.toLocaleString("pt-BR")} ${currentNiche.terms.metricShort}`, name]
                 }
               />
               <Legend wrapperStyle={{ display: "none" }} />
-              <Bar yAxisId="left" dataKey="liters" name="Volume (L)" fill="var(--primary)" radius={[6, 6, 0, 0]} maxBarSize={18} />
-              <Line yAxisId="right" type="monotone" dataKey="discount" name="Descontos (R$)" stroke="oklch(0.55 0.18 250)" strokeWidth={2.5} dot={false} />
+              <Bar
+                yAxisId="left"
+                dataKey="liters"
+                name={`${currentNiche.terms.metricLabel} (${currentNiche.terms.metricShort})`}
+                fill="var(--primary)"
+                radius={[6, 6, 0, 0]}
+                maxBarSize={18}
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="discount"
+                name="Descontos (R$)"
+                stroke="oklch(0.55 0.18 250)"
+                strokeWidth={2.5}
+                dot={false}
+              />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -371,8 +423,10 @@ function Overview() {
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold">Motor de Gamificação · Tiers Ativos</p>
-            <p className="text-xs text-muted-foreground">Regra vigente aplicada na bomba em tempo real</p>
+            <p className="text-sm font-semibold">Motor de Gamificação · Tiers Ativos ({currentNiche.badge})</p>
+            <p className="text-xs text-muted-foreground">
+              Regra vigente aplicada em tempo real para {currentNiche.terms.businessType.toLowerCase()}
+            </p>
           </div>
           <Link
             to="/dashboard/regras"
@@ -400,14 +454,15 @@ function Overview() {
                   {t.name}
                 </span>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">Faixa de volume</p>
+              <p className="mt-3 text-xs text-muted-foreground">Faixa de Qualificação</p>
               <p className="text-sm font-semibold">
-                {t.min_liters}L – {t.max_liters > 999 ? "∞" : `${t.max_liters}L`}
+                {t.min_liters} {currentNiche.terms.metricShort} –{" "}
+                {t.max_liters > 999 ? "∞" : `${t.max_liters} ${currentNiche.terms.metricShort}`}
               </p>
-              <p className="mt-2 text-xs text-muted-foreground">Desconto na bomba</p>
+              <p className="mt-2 text-xs text-muted-foreground">Desconto / Benefício</p>
               <p className="text-2xl font-bold tabular-nums">
                 {formatBRL(t.discount_per_liter)}
-                <span className="text-xs font-medium text-muted-foreground">/L</span>
+                <span className="text-xs font-medium text-muted-foreground">/{currentNiche.terms.metricShort}</span>
               </p>
             </div>
           ))}
@@ -417,8 +472,10 @@ function Overview() {
       <div className="rounded-2xl border border-border bg-card shadow-card">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
-            <p className="text-sm font-semibold">Transações recentes</p>
-            <p className="text-xs text-muted-foreground">Abastecimentos validados pelo token</p>
+            <p className="text-sm font-semibold">Transações recentes ({currentNiche.badge})</p>
+            <p className="text-xs text-muted-foreground">
+              {currentNiche.terms.transactionPlural} validados pelo token no PDV
+            </p>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
             <span className="relative flex h-2 w-2">
@@ -440,8 +497,10 @@ function Overview() {
                   <th className="px-5 py-3 text-left font-semibold">Status</th>
                   <th className="px-5 py-3 text-left font-semibold">Data/Hora</th>
                   <th className="px-5 py-3 text-left font-semibold">Cliente</th>
-                  <th className="px-5 py-3 text-left font-semibold">Combustível</th>
-                  <th className="px-5 py-3 text-right font-semibold">Volume</th>
+                  <th className="px-5 py-3 text-left font-semibold">Item / Serviço</th>
+                  <th className="px-5 py-3 text-right font-semibold">
+                    Volume ({currentNiche.terms.metricShort})
+                  </th>
                   <th className="px-5 py-3 text-right font-semibold">Desconto</th>
                   <th className="px-5 py-3 text-right font-semibold">Valor Final</th>
                 </tr>
@@ -468,7 +527,9 @@ function Overview() {
                       {tx.customerName ?? maskCpf(tx.customerCpf)}
                     </td>
                     <td className="px-5 py-3 text-muted-foreground">{tx.fuel_type}</td>
-                    <td className="px-5 py-3 text-right tabular-nums">{Number(tx.liters).toFixed(1)} L</td>
+                    <td className="px-5 py-3 text-right tabular-nums">
+                      {Number(tx.liters).toFixed(1)} {currentNiche.terms.metricShort}
+                    </td>
                     <td className="px-5 py-3 text-right font-semibold tabular-nums text-primary">
                       {formatBRL(Number(tx.discount_total))}
                     </td>

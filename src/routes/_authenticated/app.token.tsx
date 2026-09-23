@@ -6,6 +6,7 @@ import { ArrowLeft, RefreshCw, ShieldCheck, Copy, Loader2, Flame, Sparkles } fro
 import { toast } from "sonner";
 import { createFuelToken, getMyActiveToken, getMyOverview, getTiers, getActiveCustomerCampaigns } from "@/lib/loyalty.functions";
 import { formatBRL, maskCpf, tierFor, type Tier } from "@/lib/loyalty";
+import { useNiche } from "@/lib/niche-context";
 
 export const Route = createFileRoute("/_authenticated/app/token")({
   ssr: false,
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/app/token")({
 });
 
 function TokenScreen() {
+  const { currentNiche } = useNiche();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const activeTokenFn = useServerFn(getMyActiveToken);
@@ -73,7 +75,7 @@ function TokenScreen() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <span className="text-sm font-semibold">Token de Abastecimento</span>
+        <span className="text-sm font-semibold">Token de {currentNiche.terms.brandFallback}</span>
         <div className="w-10" />
       </div>
 
@@ -123,10 +125,11 @@ function TokenScreen() {
 
       <div className="mt-8 rounded-2xl border border-border bg-card p-4">
         <p className="text-sm font-semibold">Instruções</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Informe ao frentista o seu <b className="text-foreground">CPF</b> e este{" "}
-          <b className="text-foreground">código de 6 dígitos</b> antes de iniciar o abastecimento. O
-          desconto será aplicado direto na bomba.
+        <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+          Informe ao <b className="text-foreground">{currentNiche.terms.operatorLabel.toLowerCase()}</b> o seu{" "}
+          <b className="text-foreground">CPF</b> e este <b className="text-foreground">código de 6 dígitos</b> ao
+          iniciar seu atendimento no(a) <b className="text-foreground">{currentNiche.terms.locationLabel}</b>. O desconto
+          será aplicado na hora.
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-muted/60 p-3">
@@ -136,7 +139,7 @@ function TokenScreen() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Desconto do Nível</p>
-            <p className="text-sm font-semibold text-primary">{formatBRL(current.discount_per_liter)}/L</p>
+            <p className="text-sm font-semibold text-primary">{formatBRL(current.discount_per_liter)}/{currentNiche.terms.metricShort}</p>
           </div>
         </div>
       </div>
@@ -159,9 +162,9 @@ function TokenScreen() {
                   <div key={camp.id} className="mt-0.5">
                     <p className="font-bold text-foreground text-xs">{camp.title}</p>
                     <p className="text-muted-foreground text-[11px] mt-0.5">
-                      Abasteça a partir de <b>{formatBRL(camp.minFuelAmount)}</b> para somar{" "}
+                      Consumo a partir de <b>{formatBRL(camp.minFuelAmount)}</b> para somar{" "}
                       <b className="text-emerald-600 dark:text-emerald-400">
-                        +{camp.discountType === "per_liter" ? formatBRL(camp.discountValue) + "/L" : camp.discountValue + "%"}
+                        +{camp.discountType === "per_liter" ? formatBRL(camp.discountValue) + "/" + currentNiche.terms.metricShort : camp.discountValue + "%"}
                       </b>{" "}
                       ao seu desconto de nível!
                     </p>
